@@ -8,4 +8,11 @@
  *
  * 🟢 You can import this file directly.
  */
+export type * from './models/User'
+export type * from './models/Profile'
+export type * from './models/Resume'
+export type * from './models/Interview'
+export type * from './models/Question'
+export type * from './models/Answer'
+export type * from './models/Evaluation'
 export type * from './commonInputTypes'
