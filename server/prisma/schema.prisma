@@ -6,3 +6,116 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model User {
+  id       String  @id @default(uuid())
+  name     String
+  email    String  @unique
+  password String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile    Profile?
+  resumes    Resume[]
+  interviews Interview[]
+}
+
+model Profile {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  bio       String?
+  phone     String?
+  location  String?
+  education String?
+  skills    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Resume {
+  id     String @id @default(uuid())
+  userId String
+
+  fileName String
+  fileUrl  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Interview {
+  id     String @id @default(uuid())
+  userId String
+
+  title      String
+  role       String
+  difficulty String?
+  language   String?
+
+  status InterviewStatus @default(IN_PROGRESS)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions  Question[]
+  evaluation Evaluation?
+}
+
+model Question {
+  id          String @id @default(uuid())
+  interviewId String
+
+  questionText String
+  questionType String?
+
+  order Int
+
+  createdAt DateTime @default(now())
+
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  answer    Answer?
+}
+
+model Answer {
+  id         String @id @default(uuid())
+  questionId String @unique
+
+  answerText String?
+  audioUrl   String?
+
+  createdAt DateTime @default(now())
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
+model Evaluation {
+  id          String @id @default(uuid())
+  interviewId String @unique
+
+  overallScore       Float?
+  technicalScore     Float?
+  communicationScore Float?
+  confidenceScore    Float?
+
+  feedback   String?
+  strengths  String?
+  weaknesses String?
+
+  createdAt DateTime @default(now())
+
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+}
+
+enum InterviewStatus {
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
