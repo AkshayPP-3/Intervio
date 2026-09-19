@@ -1,6 +1,6 @@
 import appError from "../utils/appError.js";
 import type { Request,Response,NextFunction } from "express";
-import { success, ZodError } from "zod";
+import { ZodError } from "zod";
 import { Prisma } from "../../generated/prisma/client.js";
 
 const errorMiddleware = (
