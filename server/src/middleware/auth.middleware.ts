@@ -9,7 +9,7 @@ interface AuthPayload extends JwtPayload{
 }
 const authMiddleware = (
     req: Request,
-    res: Response,
+    _res: Response,
     next: NextFunction
 )=>{
     try{

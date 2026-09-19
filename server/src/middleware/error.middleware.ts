@@ -5,9 +5,9 @@ import { Prisma } from "../../generated/prisma/client.js";
 
 const errorMiddleware = (
     err: unknown,
-    req: Request,
+    _req: Request,
     res: Response,
-    next: NextFunction
+    _next: NextFunction
 ) =>{
     console.log(err)
     //customized error
