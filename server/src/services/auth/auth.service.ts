@@ -1,8 +1,9 @@
-import bcrypt from "bcrypt";
+import bcrypt, { compare } from "bcrypt";
 import {prisma} from "../../config/prisma.js";
 import appError from "../../utils/appError.js";
 import generateToken from "../../utils/generateToken.js";
-import { use } from "react";
+import { email } from "zod";
+import { de } from "zod/v4/locales";
 
 const registerUser = async(name: string, email: string, password: string)=>{
     const existingUser = await prisma.user.findUnique({
@@ -33,3 +34,29 @@ const registerUser = async(name: string, email: string, password: string)=>{
     return {user, token};
 }
 
+const loginUer = async(email:string, password: string)=>{
+    const user = await prisma.user.findUnique({
+        where: {
+            email
+        }
+    })
+    if(!user || !user.password){
+        throw new appError("Invalid email or password",401);
+    }
+
+    const isPasswordValid = await compare(password, user.password);
+    if(!isPasswordValid){
+        throw new appError("Invalid email or password",401);
+    }
+
+    const token = generateToken(user.id);
+    return{
+        user:{
+            id: user.id,
+            name: user.name,
+            email: user.email,
+        },
+        token,
+    }
+}
+export default {registerUser, loginUer};
