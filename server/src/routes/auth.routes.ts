@@ -17,3 +17,4 @@ router.post(
     validate(loginSchema),
     authController.login,
 )
+export default router;

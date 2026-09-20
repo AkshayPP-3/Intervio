@@ -1,6 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
 import authService from "../services/auth/auth.service";
-import { success } from "zod";
 
 const register = async (req: Request, res: Response, next: NextFunction)=>{
     try{
