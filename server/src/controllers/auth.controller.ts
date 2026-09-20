@@ -15,3 +15,17 @@ const register = async (req: Request, res: Response, next: NextFunction)=>{
         next(error);
     }
 }
+const login = async(req: Request, res: Response, next: NextFunction)=>{
+    try{
+        const {email , password} = req.body;
+        const result = authService.loginUer(email, password);
+        return res.status(200).json({
+            success: true,
+            message: "Login successfull",
+            data: result,
+        })
+    }catch(error){
+        next(error);
+    }
+ }
+ export default {register,login};
