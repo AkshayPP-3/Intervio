@@ -1,51 +1,90 @@
-import { email, string } from "zod";
-import {prisma} from "../../config/prisma";
-import appError from "../../utils/appError";
-import { throwDeprecation } from "node:process";
+import { prisma } from "../../config/prisma.js";
+import AppError from "../../utils/appError.js";
 
-const getUserById = async (userId: string)=>{
+const getUserById = async (userId: string) => {
     const user = await prisma.user.findUnique({
-        where:{
+        where: {
             id: userId,
         },
-        select:{
+        select: {
             id: true,
             name: true,
             email: true,
             createdAt: true,
             updatedAt: true,
         },
-    })
-    if(!user){
-        throw new appError("User not found",404);
-    }
-    return user;
-}
+    });
 
-const updateUser = async(
+    if (!user) {
+        throw new AppError("User not found", 404);
+    }
+
+    return user;
+};
+
+const updateUser = async (
     userId: string,
     data: {
-        name?: string,
-        email?: string,
+        name?: string;
+        email?: string;
     }
-)=>{
+) => {
     const user = await prisma.user.findUnique({
-        where:{
-            id: userId
-        }
-    })
-    if(!user){
-        throw new appError("User not found",404);
+        where: {
+            id: userId,
+        },
+    });
+
+    if (!user) {
+        throw new AppError("User not found", 404);
     }
-    if(data.email && data.email!==user.email){
+
+    const updateData: {
+        name?: string;
+        email?: string;
+    } = {};
+
+    if (data.name !== undefined) {
+        updateData.name = data.name;
+    }
+
+    if (data.email !== undefined) {
+        updateData.email = data.email;
+    }
+
+    if (data.email && data.email !== user.email) {
         const existingUser = await prisma.user.findUnique({
-            where:{
+            where: {
                 email: data.email,
-            }
-        })
-        if(existingUser){
-            throw new appError("User with this email already exists",409);
+            },
+        });
+
+        if (existingUser) {
+            throw new AppError(
+                "User with this email already exists",
+                409
+            );
         }
     }
-    
-}
+
+    const updatedUser = await prisma.user.update({
+        where: {
+            id: userId,
+        },
+        data: updateData,
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            createdAt: true,
+            updatedAt: true,
+        },
+    });
+
+    return updatedUser;
+};
+
+export default {
+    getUserById,
+    updateUser,
+};
