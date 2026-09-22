@@ -17,3 +17,4 @@ userRouter.patch(
     validate(updateUserSchema),
     userController.updatedMe,
 )
+export default userRouter;
