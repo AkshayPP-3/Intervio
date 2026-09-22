@@ -14,6 +14,7 @@ userRouter.get(
 
 userRouter.patch(
     "/me",
+    authMiddleware,
     validate(updateUserSchema),
     userController.updatedMe,
 )
