@@ -11,3 +11,9 @@ userRouter.get(
     authMiddleware,
     userController.getMe,
 )
+
+userRouter.patch(
+    "/me",
+    validate(updateUserSchema),
+    userController.updatedMe,
+)
