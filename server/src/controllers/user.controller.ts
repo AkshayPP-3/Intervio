@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import userService from "../services/user/user.service";
 import appError from "../utils/appError";
-import { get } from "node:http";
+
 
 const getMe = async (req: Request, res: Response, next: NextFunction)=>{
     try{
