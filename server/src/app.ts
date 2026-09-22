@@ -15,7 +15,7 @@ app.use(express.urlencoded({extended: true}));
 app.use(morgan("dev"));
 
 app.use("/api/auth",authRouter);
-app.use("/api/me",userRouter);
+app.use("/api/users",userRouter);
 
 app.get("/",(_req,res)=>{
     res.json({
