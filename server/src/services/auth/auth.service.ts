@@ -34,7 +34,7 @@ const registerUser = async(name: string, email: string, password: string)=>{
     return {user, token};
 }
 
-const loginUer = async(email:string, password: string)=>{
+const loginUser = async(email:string, password: string)=>{
     const user = await prisma.user.findUnique({
         where: {
             email
@@ -59,4 +59,4 @@ const loginUer = async(email:string, password: string)=>{
         token,
     }
 }
-export default {registerUser, loginUer};
+export default {registerUser, loginUser};

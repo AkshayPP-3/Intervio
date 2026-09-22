@@ -4,7 +4,7 @@ import authService from "../services/auth/auth.service";
 const register = async (req: Request, res: Response, next: NextFunction)=>{
     try{
         const { name, email, password} = req.body;
-        const result = authService.registerUser(name,email,password);
+        const result = await authService.registerUser(name,email,password);
         return res.status(201).json({
             success: true,
             message: "User registered successfully",
@@ -17,7 +17,7 @@ const register = async (req: Request, res: Response, next: NextFunction)=>{
 const login = async(req: Request, res: Response, next: NextFunction)=>{
     try{
         const {email , password} = req.body;
-        const result = authService.loginUer(email, password);
+        const result = authService.loginUser(email, password);
         return res.status(200).json({
             success: true,
             message: "Login successfull",
