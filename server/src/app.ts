@@ -3,6 +3,8 @@ import cors from "cors"
 import helmet from "helmet"
 import morgan from "morgan"
 
+import errorMiddleware from "./middleware/error.middleware.js"
+
 import authRouter from "./routes/auth.routes.js"
 import userRouter from "./routes/user.routes.js"
 
@@ -23,5 +25,7 @@ app.get("/",(_req,res)=>{
         message: "intervio api is running",
     });
 });
+
+app.use(errorMiddleware);
 
 export default app;
