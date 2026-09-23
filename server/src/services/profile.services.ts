@@ -19,4 +19,11 @@ const createProfile = async (
     if(existingUser){
         throw new appError("profile already exists",409);
     }
+    const profile = await prisma.profile.create({
+        data: {
+            userId,
+            ...data,
+        }
+    })
+    return profile;
 }
