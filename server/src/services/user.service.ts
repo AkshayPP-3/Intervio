@@ -1,5 +1,5 @@
-import { prisma } from "../../config/prisma.js";
-import AppError from "../../utils/appError.js";
+import { prisma } from "../config/prisma.js";
+import AppError from "../utils/appError.js";
 
 const getUserById = async (userId: string) => {
     const user = await prisma.user.findUnique({
