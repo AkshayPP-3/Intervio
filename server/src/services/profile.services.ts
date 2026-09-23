@@ -38,3 +38,29 @@ const getProfileByUserId = async(userId: string)=>{
     }
     return profile;
 }
+const updateProfile = async(
+    userId: string,
+    data: {
+        bio?: string,
+        phone?:string,
+        location?:string,
+        education?:string,
+        skills?:string,
+    },
+)=>{
+    const existingProfile = await prisma.profile.findUnique({
+        where: {
+            userId,
+        }
+    })
+    if(!existingProfile){
+        throw new appError("Profile not found",404);
+    }
+    const profile = await prisma.profile.update({
+        where: {
+            userId
+        },
+        data,
+    })
+    return profile;
+}
