@@ -27,3 +27,14 @@ const createProfile = async (
     })
     return profile;
 }
+const getProfileByUserId = async(userId: string)=>{
+    const profile = await prisma.profile.findUnique({
+        where: {
+            userId,
+        },
+    })
+    if(!profile){
+        throw new appError("Profile not found",404);
+    }
+    return profile;
+}
