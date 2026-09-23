@@ -64,3 +64,20 @@ const updateProfile = async(
     })
     return profile;
 }
+const deleteProfile = async(userId: string)=>{
+    const existingProfile = await prisma.profile.findUnique({
+        where: {
+            userId,
+        }
+    })
+    if(!existingProfile){
+        throw new appError("Profile not found",404);
+    }
+    await prisma.profile.delete({
+        where: {
+            userId,
+        }
+    })
+}
+
+export default {createProfile, getProfileByUserId, updateProfile, deleteProfile};
