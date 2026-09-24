@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import profileServices from "../services/profile.services.js";
+import { success } from "zod";
 
 const createProfile = async (req: Request, res: Response, next: NextFunction)=>{
     try{
@@ -10,6 +11,16 @@ const createProfile = async (req: Request, res: Response, next: NextFunction)=>{
                 message: "Authentication required",            })
         }
 
-    
+        const profile = await profileServices.createProfile(
+            userId,
+            req.body,
+        );
+        return res.status(201).json({
+            success: true,
+            message: "Profile created successfully",
+            data: profile,
+        })
+    }catch(error){
+        next(error);
     }
 }
