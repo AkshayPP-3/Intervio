@@ -9,3 +9,9 @@ profileRouter.post(
     authMiddleware,
     profileController.createProfile
 );
+profileRouter.get(
+    "/",
+    authMiddleware,
+    profileController.getProfile
+);
+
