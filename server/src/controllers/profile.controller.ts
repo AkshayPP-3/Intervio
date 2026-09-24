@@ -1,9 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
 import profileServices from "../services/profile.services.js";
-import { success } from "zod";
-import { fa } from "zod/v4/locales";
-import { nextTick } from "node:process";
-import { profile } from "node:console";
 
 const createProfile = async (req: Request, res: Response, next: NextFunction)=>{
     try{
@@ -87,3 +83,5 @@ const deleteProfile = async(req: Request,res: Response, next: NextFunction)=>{
         next(error);
     }
 }
+
+export default {createProfile, getProfile, updateProfile, deleteProfile};
