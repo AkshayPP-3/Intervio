@@ -1,6 +1,8 @@
 import type { Request, Response, NextFunction } from "express";
 import profileServices from "../services/profile.services.js";
 import { success } from "zod";
+import { fa } from "zod/v4/locales";
+import { nextTick } from "node:process";
 
 const createProfile = async (req: Request, res: Response, next: NextFunction)=>{
     try{
@@ -37,6 +39,28 @@ const getProfile = async(req: Request, res: Response, next: NextFunction)=>{
         return res.status(200).json({
             success: true,
             message: "Profile fetched successfully",
+            data: profile,
+        })
+    }catch(error){
+        next(error);
+    }
+}
+const updateProfile = async(req: Request, res: Response, next: NextFunction)=>{
+    try{
+        const userId = req.body?.id;
+        if(!userId){
+            return res.status(401).json({
+                success: false,
+                message: "Authentication required"
+            })
+        }
+        const profile = await profileServices.updateProfile(
+            userId,
+            req.body,
+        )
+        return res.status(200).json({
+            success: true,
+            message: "Profile updated successfully",
             data: profile,
         })
     }catch(error){
