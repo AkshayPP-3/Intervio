@@ -26,14 +26,14 @@ const createProfile = async (req: Request, res: Response, next: NextFunction)=>{
 }
 const getProfile = async(req: Request, res: Response, next: NextFunction)=>{
     try{
-        const user = req.body?.id;
-        if(!user){
+        const userId = req.body?.id;
+        if(!userId){
             return res.status(401).json({
                 success: false,
                 message: "Authentication required",
             })
         }
-        const profile = await profileServices.getProfileByUserId(user);
+        const profile = await profileServices.getProfileByUserId(userId);
         return res.status(200).json({
             success: true,
             message: "Profile fetched successfully",
