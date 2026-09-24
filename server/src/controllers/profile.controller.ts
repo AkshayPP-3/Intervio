@@ -25,7 +25,7 @@ const createProfile = async (req: Request, res: Response, next: NextFunction)=>{
 }
 const getProfile = async(req: Request, res: Response, next: NextFunction)=>{
     try{
-        const userId = req.body?.id;
+        const userId = req.body?.userId;
         if(!userId){
             return res.status(401).json({
                 success: false,
@@ -44,7 +44,7 @@ const getProfile = async(req: Request, res: Response, next: NextFunction)=>{
 }
 const updateProfile = async(req: Request, res: Response, next: NextFunction)=>{
     try{
-        const userId = req.body?.id;
+        const userId = req.body?.userId;
         if(!userId){
             return res.status(401).json({
                 success: false,
@@ -66,7 +66,7 @@ const updateProfile = async(req: Request, res: Response, next: NextFunction)=>{
 }
 const deleteProfile = async(req: Request,res: Response, next: NextFunction)=>{
     try{
-        const userId = req.body?.id;
+        const userId = req.body?.userId;
         if(!userId){
             return res.status(401).json({
                 success: false,
