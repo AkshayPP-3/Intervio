@@ -3,6 +3,7 @@ import profileServices from "../services/profile.services.js";
 import { success } from "zod";
 import { fa } from "zod/v4/locales";
 import { nextTick } from "node:process";
+import { profile } from "node:console";
 
 const createProfile = async (req: Request, res: Response, next: NextFunction)=>{
     try{
@@ -61,6 +62,25 @@ const updateProfile = async(req: Request, res: Response, next: NextFunction)=>{
         return res.status(200).json({
             success: true,
             message: "Profile updated successfully",
+            data: profile,
+        })
+    }catch(error){
+        next(error);
+    }
+}
+const deleteProfile = async(req: Request,res: Response, next: NextFunction)=>{
+    try{
+        const userId = req.body?.id;
+        if(!userId){
+            return res.status(401).json({
+                success: false,
+                message: "Authentication required"
+            })
+        }
+        await profileServices.deleteProfile(userId);
+        return res.status(200).json({
+            success: true,
+            message: "Profile deleted successfully",
             data: profile,
         })
     }catch(error){
