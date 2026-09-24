@@ -7,6 +7,7 @@ import errorMiddleware from "./middleware/error.middleware.js"
 
 import authRouter from "./routes/auth.routes.js"
 import userRouter from "./routes/user.routes.js"
+import profileRouter from "./routes/profile.routes.js";
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use(morgan("dev"));
 
 app.use("/api/auth",authRouter);
 app.use("/api/users",userRouter);
+app.use("/api/profile",profileRouter);
 
 app.get("/",(_req,res)=>{
     res.json({
