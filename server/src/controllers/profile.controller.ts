@@ -24,3 +24,22 @@ const createProfile = async (req: Request, res: Response, next: NextFunction)=>{
         next(error);
     }
 }
+const getProfile = async(req: Request, res: Response, next: NextFunction)=>{
+    try{
+        const user = req.body?.id;
+        if(!user){
+            return res.status(401).json({
+                success: false,
+                message: "Authentication required",
+            })
+        }
+        const profile = await profileServices.getProfileByUserId(user);
+        return res.status(200).json({
+            success: true,
+            message: "Profile fetched successfully",
+            data: profile,
+        })
+    }catch(error){
+        next(error);
+    }
+}
