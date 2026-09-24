@@ -14,9 +14,15 @@ profileRouter.get(
     authMiddleware,
     profileController.getProfile
 );
-
 profileRouter.patch(
     "/",
     authMiddleware,
     profileController.updateProfile
 );
+profileRouter.delete(
+    "/",
+    authMiddleware,
+    profileController.deleteProfile
+);
+
+export default profileRouter;
