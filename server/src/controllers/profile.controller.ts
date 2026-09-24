@@ -77,7 +77,6 @@ const deleteProfile = async(req: Request,res: Response, next: NextFunction)=>{
         return res.status(200).json({
             success: true,
             message: "Profile deleted successfully",
-            data: profile,
         })
     }catch(error){
         next(error);
