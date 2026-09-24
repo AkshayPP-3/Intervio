@@ -15,3 +15,8 @@ profileRouter.get(
     profileController.getProfile
 );
 
+profileRouter.patch(
+    "/",
+    authMiddleware,
+    profileController.updateProfile
+);
