@@ -47,3 +47,31 @@ const getResumeById = async (
 
     return resume;
 };
+const updateResume = async (
+    userId: string,
+    resumeId: string,
+    data: {
+        fileName?: string;
+        fileUrl?: string;
+    },
+) => {
+    const existingResume = await prisma.resume.findFirst({
+        where: {
+            id: resumeId,
+            userId,
+        },
+    });
+
+    if (!existingResume) {
+        throw new appError("Resume not found", 404);
+    }
+
+    const resume = await prisma.resume.update({
+        where: {
+            id: resumeId,
+        },
+        data,
+    });
+
+    return resume;
+};
