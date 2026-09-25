@@ -75,3 +75,32 @@ const updateResume = async (
 
     return resume;
 };
+const deleteResume = async (
+    userId: string,
+    resumeId: string,
+) => {
+    const existingResume = await prisma.resume.findFirst({
+        where: {
+            id: resumeId,
+            userId,
+        },
+    });
+
+    if (!existingResume) {
+        throw new appError("Resume not found", 404);
+    }
+
+    await prisma.resume.delete({
+        where: {
+            id: resumeId,
+        },
+    });
+};
+
+export default {
+    createResume,
+    getResumesByUserId,
+    getResumeById,
+    updateResume,
+    deleteResume,
+};
