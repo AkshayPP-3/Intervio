@@ -1,7 +1,7 @@
 import bcrypt, { compare } from "bcrypt";
-import {prisma} from "../../config/prisma.js";
-import appError from "../../utils/appError.js";
-import generateToken from "../../utils/generateToken.js";
+import {prisma} from "../config/prisma.js";
+import appError from "../utils/appError.js";
+import generateToken from "../utils/generateToken.js";
 import { email } from "zod";
 import { de } from "zod/v4/locales";
 
