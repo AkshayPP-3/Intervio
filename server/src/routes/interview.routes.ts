@@ -16,35 +16,35 @@ import {
   updateInterviewStatusSchema,
 } from "../schemas/interview.schema.js";
 
-const router = Router();
+const interviewRouter = Router();
 
-router.use(authMiddleware);
+interviewRouter.use(authMiddleware);
 
-router.post(
+interviewRouter.post(
   "/",
   validate(createInterviewSchema),
   createInterview
 );
 
-router.get(
+interviewRouter.get(
   "/",
   getUserInterviews
 );
 
-router.get(
+interviewRouter.get(
   "/:interviewId",
   getInterviewById
 );
 
-router.patch(
+interviewRouter.patch(
   "/:interviewId/status",
   validate(updateInterviewStatusSchema),
   updateInterviewStatus
 );
 
-router.delete(
+interviewRouter.delete(
   "/:interviewId",
   deleteInterview
 );
 
-export default router;
+export default interviewRouter;
