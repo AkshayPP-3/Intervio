@@ -2,8 +2,6 @@ import bcrypt, { compare } from "bcrypt";
 import {prisma} from "../config/prisma.js";
 import appError from "../utils/appError.js";
 import generateToken from "../utils/generateToken.js";
-import { email } from "zod";
-import { de } from "zod/v4/locales";
 
 const registerUser = async(name: string, email: string, password: string)=>{
     const existingUser = await prisma.user.findUnique({
