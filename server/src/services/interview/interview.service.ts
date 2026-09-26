@@ -1,5 +1,5 @@
-import { prisma } from "../config/prisma.js";
-import { AppError } from "../utils/AppError.js";
+import { prisma } from "../../config/prisma";
+import appError from "../../utils/appError.js";
 
 interface CreateInterviewData {
   title: string;
@@ -17,14 +17,19 @@ export const createInterview = async (
       userId,
       title: data.title,
       role: data.role,
-      difficulty: data.difficulty,
-      language: data.language,
+
+      ...(data.difficulty !== undefined && {
+        difficulty: data.difficulty,
+      }),
+
+      ...(data.language !== undefined && {
+        language: data.language,
+      }),
     },
   });
 
   return interview;
 };
-
 export const getInterviewById = async (
   userId: string,
   interviewId: string
@@ -41,7 +46,7 @@ export const getInterviewById = async (
   });
 
   if (!interview) {
-    throw new AppError("Interview not found", 404);
+    throw new appError("Interview not found", 404);
   }
 
   return interview;
@@ -73,7 +78,7 @@ export const updateInterviewStatus = async (
   });
 
   if (!interview) {
-    throw new AppError("Interview not found", 404);
+    throw new appError("Interview not found", 404);
   }
 
   const updatedInterview = await prisma.interview.update({
@@ -100,7 +105,7 @@ export const deleteInterview = async (
   });
 
   if (!interview) {
-    throw new AppError("Interview not found", 404);
+    throw new appError("Interview not found", 404);
   }
 
   await prisma.interview.delete({
