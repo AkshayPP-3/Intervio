@@ -21,3 +21,10 @@ export const createInterviewSchema = z.object({
     .min(1, "Language cannot be empty")
     .optional(),
 });
+export const updateInterviewStatusSchema = z.object({
+  status: z.enum([
+    "IN_PROGRESS",
+    "COMPLETED",
+    "CANCELLED",
+  ]),
+});
