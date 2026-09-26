@@ -8,7 +8,8 @@ import errorMiddleware from "./middleware/error.middleware.js"
 import authRouter from "./routes/auth.routes.js";
 import userRouter from "./routes/user.routes.js";
 import profileRouter from "./routes/profile.routes.js";
-import resumeRouter from "./routes/resume.routes.js"
+import resumeRouter from "./routes/resume.routes.js";
+import interviewRouter from "./routes/interview.routes.js"
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use("/api/auth",authRouter);
 app.use("/api/users",userRouter);
 app.use("/api/profile",profileRouter);
 app.use("/api/resumes",resumeRouter);
+app.use("/api/interviews",interviewRouter);
 
 app.get("/",(_req,res)=>{
     res.json({
