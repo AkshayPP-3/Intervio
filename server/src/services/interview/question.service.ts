@@ -4,7 +4,7 @@ import appError from "../../utils/appError.js";
 interface CreateQuestionData {
   interviewId: string;
   questionText: string;
-  questionType?: string;
+  questionType?: string | undefined;
   order: number;
 }
 
