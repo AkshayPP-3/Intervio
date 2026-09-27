@@ -12,6 +12,7 @@ import resumeRouter from "./routes/resume.routes.js";
 import interviewRouter from "./routes/interview.routes.js";
 import questionRouter from "./routes/question.routes.js";
 import answerRouter from "./routes/answer.routes.js";
+import evaluationRouter from "./routes/evaluation.routes.js";
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use("/api/resumes",resumeRouter);
 app.use("/api/interviews",interviewRouter);
 app.use("/api/questions",questionRouter);
 app.use("/api/answers",answerRouter);
+app.use("/api/evaluations",evaluationRouter);
 
 app.get("/",(_req,res)=>{
     res.json({
