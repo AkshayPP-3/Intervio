@@ -44,3 +44,30 @@ export const createAnswer = async (data: CreateAnswerData) => {
 
   return answer;
 };
+export const getAnswerByQuestion = async (questionId: string) => {
+  const answer = await prisma.answer.findUnique({
+    where: {
+      questionId,
+    },
+  });
+
+  if (!answer) {
+    throw new appError("Answer not found", 404);
+  }
+
+  return answer;
+};
+
+export const getAnswerById = async (answerId: string) => {
+  const answer = await prisma.answer.findUnique({
+    where: {
+      id: answerId,
+    },
+  });
+
+  if (!answer) {
+    throw new appError("Answer not found", 404);
+  }
+
+  return answer;
+};
