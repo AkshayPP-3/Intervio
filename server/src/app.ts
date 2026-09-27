@@ -11,6 +11,7 @@ import profileRouter from "./routes/profile.routes.js";
 import resumeRouter from "./routes/resume.routes.js";
 import interviewRouter from "./routes/interview.routes.js";
 import questionRouter from "./routes/question.routes.js";
+import answerRouter from "./routes/answer.routes.js";
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use("/api/profile",profileRouter);
 app.use("/api/resumes",resumeRouter);
 app.use("/api/interviews",interviewRouter);
 app.use("/api/questions",questionRouter);
+app.use("/api/answers",answerRouter);
 
 app.get("/",(_req,res)=>{
     res.json({
