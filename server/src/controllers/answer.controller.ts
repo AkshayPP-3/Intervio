@@ -49,3 +49,26 @@ export const getAnswerByQuestionController = async (
     next(error);
   }
 };
+export const getAnswerByIdController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const answerId = req.params.answerId;
+
+    if (typeof answerId !== "string") {
+      throw new appError("Invalid answer ID", 400);
+    }
+
+    const answer = await getAnswerById(answerId);
+
+    res.status(200).json({
+      success: true,
+      message: "Answer fetched successfully",
+      data: answer,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
