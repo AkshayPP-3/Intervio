@@ -76,3 +76,13 @@ export type Answer = Prisma.AnswerModel
  * 
  */
 export type Evaluation = Prisma.EvaluationModel
+/**
+ * Model Chat
+ * 
+ */
+export type Chat = Prisma.ChatModel
+/**
+ * Model ChatMessage
+ * 
+ */
+export type ChatMessage = Prisma.ChatMessageModel

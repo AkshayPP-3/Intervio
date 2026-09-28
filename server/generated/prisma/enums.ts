@@ -16,3 +16,11 @@ export const InterviewStatus = {
 } as const
 
 export type InterviewStatus = (typeof InterviewStatus)[keyof typeof InterviewStatus]
+
+
+export const ChatRole = {
+  USER: 'USER',
+  ASSISTANT: 'ASSISTANT'
+} as const
+
+export type ChatRole = (typeof ChatRole)[keyof typeof ChatRole]

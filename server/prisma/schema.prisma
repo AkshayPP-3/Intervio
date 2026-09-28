@@ -19,6 +19,7 @@ model User {
   profile    Profile?
   resumes    Resume[]
   interviews Interview[]
+  chats      Chat[]
 }
 
 model Profile {
@@ -118,4 +119,30 @@ enum InterviewStatus {
   IN_PROGRESS
   COMPLETED
   CANCELLED
+}
+
+model Chat {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages ChatMessage[]
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  chatId    String
+  role      ChatRole
+  content   String
+  createdAt DateTime @default(now())
+
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+}
+
+enum ChatRole {
+  USER
+  ASSISTANT
 }
