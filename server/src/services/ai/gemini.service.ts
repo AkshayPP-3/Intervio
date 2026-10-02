@@ -74,3 +74,75 @@ export const generateChatResponse = async (
     );
   }
 }
+interface InterviewQuestion {
+  questionText: string;
+  questionType: string;
+  order: number;
+}
+
+interface GenerateInterviewQuestionsData {
+  role: string;
+  difficulty?: string;
+  language?: string;
+}
+
+export const generateInterviewQuestions = async (
+  data: GenerateInterviewQuestionsData
+): Promise<InterviewQuestion[]> => {
+  try {
+    const prompt = `
+Generate 5 interview questions for a mock interview.
+
+Role: ${data.role}
+Difficulty: ${data.difficulty ?? "Medium"}
+Language: ${data.language ?? "English"}
+
+Requirements:
+- Questions should be relevant to the role.
+- Mix conceptual and practical questions.
+- Questions should be suitable for an interview.
+- Return exactly 5 questions.
+- Return ONLY valid JSON.
+- Do not include markdown or code fences.
+
+Return this exact format:
+
+[
+  {
+    "questionText": "Question here",
+    "questionType": "TECHNICAL",
+    "order": 1
+  }
+]
+`;
+
+    const response = await gemini.models.generateContent({
+      model: "gemini-3.8-flash",
+      contents: prompt,
+    });
+
+    const text = response.text;
+
+    if (!text) {
+      throw new appError(
+        "Gemini returned an empty response",
+        502
+      );
+    }
+
+    const questions: InterviewQuestion[] = JSON.parse(text);
+
+    return questions;
+  } catch (error) {
+    if (error instanceof appError) {
+      throw error;
+    }
+
+    console.error("Gemini question generation error:", error);
+
+    throw new appError(
+      "Failed to generate interview questions",
+      502
+    );
+  }
+};
