@@ -1,5 +1,6 @@
 import {prisma} from "../config/prisma.js";
 import appError from "../utils/appError.js";
+import {generateChatResponse} from "../services/ai/gemini.service.js";
 
 interface CreateChatData {
   userId: string;
@@ -69,33 +70,58 @@ export const getChatById = async (
 
   return chat;
 };
-
 export const createMessage = async (
   data: CreateMessageData,
   userId: string
 ) => {
+  // 1. Check whether the chat belongs to the logged-in user
   const chat = await prisma.chat.findFirst({
     where: {
       id: data.chatId,
       userId,
     },
   });
-
   if (!chat) {
     throw new appError("Chat not found", 404);
   }
-
-  const message = await prisma.chatMessage.create({
+  // 2. Save the user's message
+  const userMessage = await prisma.chatMessage.create({
     data: {
       chatId: data.chatId,
       role: "USER",
       content: data.content,
     },
   });
-
-  return message;
+  // 3. Get previous conversation history
+  const previousMessages = await prisma.chatMessage.findMany({
+    where: {
+      chatId: data.chatId,
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+  // 4. Send conversation history to Gemini
+  const aiResponse = await generateChatResponse(
+    previousMessages.map((message) => ({
+      role: message.role,
+      content: message.content,
+    }))
+  );
+  // 5. Save Gemini's response
+  const assistantMessage = await prisma.chatMessage.create({
+    data: {
+      chatId: data.chatId,
+      role: "ASSISTANT",
+      content: aiResponse,
+    },
+  });
+  // 6. Return both messages
+  return {
+    userMessage,
+    assistantMessage,
+  };
 };
-
 export const getChatMessages = async (
   chatId: string,
   userId: string
