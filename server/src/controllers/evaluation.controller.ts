@@ -36,7 +36,7 @@ export const getEvaluationByInterviewController = async (
   res: Response,
   next: NextFunction
 ) => {
-  try {
+  try{
     const interviewId = req.params.interviewId;
     if (typeof interviewId !== "string") {
       throw new appError("Invalid interview ID", 400);
