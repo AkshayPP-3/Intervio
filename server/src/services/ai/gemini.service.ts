@@ -25,7 +25,7 @@ export const generateChatResponse = async (
     }));
 
     const response = await gemini.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.8-flash",
       contents,
       config: {
         systemInstruction:
@@ -43,16 +43,34 @@ export const generateChatResponse = async (
     }
 
     return text;
-  } catch (error) {
-    if (error instanceof appError) {
-      throw error;
-    }
+  }catch (error: any) {
+      if (error instanceof appError) {
+        throw error;
+      }
+      console.error("Gemini API error:", error);
+      if (error?.status === 503) {
+        throw new appError(
+          "Gemini is temporarily unavailable. Please try again in a moment.",
+          503
+        );
+      }
+      if (error?.status === 429) {
+        throw new appError(
+          "Gemini API rate limit reached. Please try again later.",
+          429
+        );
+      }
 
-    console.error("Gemini API error:", error);
+    if (error?.status === 401 || error?.status === 403) {
+      throw new appError(
+        "Gemini API authentication failed.",
+        502
+      );
+    }
 
     throw new appError(
       "Failed to generate AI response",
       502
     );
   }
-};
+}
