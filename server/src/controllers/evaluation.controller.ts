@@ -18,7 +18,12 @@ export const createEvaluationController = async (
   try {
     const validatedData = createEvaluationSchema.parse(req.body);
 
-    const evaluation = await createAIEvaluation(validatedData.interviewId);
+    const userId = req.user.userId;
+
+    const evaluation = await createAIEvaluation(
+      userId,
+      validatedData.interviewId
+    );
 
     res.status(201).json({
       success: true,
@@ -42,7 +47,10 @@ export const getEvaluationByInterviewController = async (
       throw new appError("Invalid interview ID", 400);
     }
 
+    const userId = req.user.userId;
+
     const evaluation = await getEvaluationByInterview(
+      userId,
       interviewId
     );
 
@@ -68,7 +76,10 @@ export const getEvaluationByIdController = async (
       throw new appError("Invalid evaluation ID", 400);
     }
 
+    const userId = req.user.userId;
+
     const evaluation = await getEvaluationById(
+      userId,
       evaluationId
     );
 
