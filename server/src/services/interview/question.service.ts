@@ -1,4 +1,4 @@
-import {prisma} from "../../config/prisma.js";
+import { prisma } from "../../config/prisma.js";
 import appError from "../../utils/appError.js";
 
 interface CreateQuestionData {
@@ -8,10 +8,14 @@ interface CreateQuestionData {
   order: number;
 }
 
-export const createQuestion = async (data: CreateQuestionData) => {
-  const interview = await prisma.interview.findUnique({
+export const createQuestion = async (
+  userId: string,
+  data: CreateQuestionData
+) => {
+  const interview = await prisma.interview.findFirst({
     where: {
       id: data.interviewId,
+      userId,
     },
   });
 
@@ -24,6 +28,7 @@ export const createQuestion = async (data: CreateQuestionData) => {
       interviewId: data.interviewId,
       questionText: data.questionText,
       order: data.order,
+
       ...(data.questionType !== undefined && {
         questionType: data.questionType,
       }),
@@ -32,10 +37,15 @@ export const createQuestion = async (data: CreateQuestionData) => {
 
   return question;
 };
-export const getQuestionsByInterview = async (interviewId: string) => {
-  const interview = await prisma.interview.findUnique({
+
+export const getQuestionsByInterview = async (
+  userId: string,
+  interviewId: string
+) => {
+  const interview = await prisma.interview.findFirst({
     where: {
       id: interviewId,
+      userId,
     },
   });
 
@@ -55,10 +65,16 @@ export const getQuestionsByInterview = async (interviewId: string) => {
   return questions;
 };
 
-export const getQuestionById = async (questionId: string) => {
-  const question = await prisma.question.findUnique({
+export const getQuestionById = async (
+  userId: string,
+  questionId: string
+) => {
+  const question = await prisma.question.findFirst({
     where: {
       id: questionId,
+      interview: {
+        userId,
+      },
     },
   });
 
