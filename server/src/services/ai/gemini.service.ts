@@ -146,3 +146,121 @@ Return this exact format:
     );
   }
 };
+interface InterviewEvaluationQuestion {
+  question: string;
+  answer: string;
+}
+
+interface EvaluateInterviewData {
+  role: string;
+  difficulty?: string | null;
+  language?: string | null;
+  questions: InterviewEvaluationQuestion[];
+}
+
+interface InterviewEvaluationResult {
+  overallScore: number;
+  technicalScore: number;
+  communicationScore: number;
+  confidenceScore: number;
+  feedback: string;
+  strengths: string[];
+  weaknesses: string[];
+}
+
+export const evaluateInterview = async (
+  data: EvaluateInterviewData
+): Promise<InterviewEvaluationResult> => {
+  try {
+    const prompt = `
+You are an AI interviewer evaluating a candidate's complete mock interview.
+
+Interview Details:
+Role: ${data.role}
+Difficulty: ${data.difficulty ?? "Medium"}
+Language: ${data.language ?? "English"}
+
+Interview Questions and Candidate Answers:
+
+${data.questions
+  .map(
+    (item, index) => `
+Question ${index + 1}:
+${item.question}
+
+Candidate Answer:
+${item.answer}
+`
+  )
+  .join("\n")}
+
+Evaluate the candidate based on:
+
+1. Technical knowledge
+2. Communication quality
+3. Confidence demonstrated through the answers
+4. Overall interview performance
+
+Scoring:
+- overallScore: 0 to 100
+- technicalScore: 0 to 100
+- communicationScore: 0 to 100
+- confidenceScore: 0 to 100
+
+Also provide:
+- concise overall feedback
+- key strengths
+- key weaknesses
+
+Return ONLY valid JSON.
+
+Do not use markdown.
+Do not use code fences.
+Do not include any text outside the JSON.
+
+Return exactly this structure:
+
+{
+  "overallScore": 0,
+  "technicalScore": 0,
+  "communicationScore": 0,
+  "confidenceScore": 0,
+  "feedback": "",
+  "strengths": [],
+  "weaknesses": []
+}
+`;
+
+    const response = await gemini.models.generateContent({
+      model: "gemini-3.8-flash",
+      contents: prompt,
+    });
+
+    const text = response.text;
+
+    if (!text) {
+      throw new appError(
+        "Gemini returned an empty response",
+        502
+      );
+    }
+
+    const evaluation: InterviewEvaluationResult = JSON.parse(text);
+
+    return evaluation;
+  } catch (error) {
+    if (error instanceof appError) {
+      throw error;
+    }
+
+    console.error(
+      "Gemini interview evaluation error:",
+      error
+    );
+
+    throw new appError(
+      "Failed to evaluate interview",
+      502
+    );
+  }
+};
