@@ -17,14 +17,11 @@ export const createEvaluationController = async (
 ) => {
   try {
     const validatedData = createEvaluationSchema.parse(req.body);
-
     const userId = req.user.userId;
-
     const evaluation = await createAIEvaluation(
       userId,
       validatedData.interviewId
     );
-
     res.status(201).json({
       success: true,
       message: "Evaluation created successfully",
@@ -34,7 +31,6 @@ export const createEvaluationController = async (
     next(error);
   }
 };
-
 export const getEvaluationByInterviewController = async (
   req: Request,
   res: Response,
@@ -42,18 +38,14 @@ export const getEvaluationByInterviewController = async (
 ) => {
   try {
     const interviewId = req.params.interviewId;
-
     if (typeof interviewId !== "string") {
       throw new appError("Invalid interview ID", 400);
     }
-
     const userId = req.user.userId;
-
     const evaluation = await getEvaluationByInterview(
       userId,
       interviewId
     );
-
     res.status(200).json({
       success: true,
       message: "Evaluation fetched successfully",
@@ -63,7 +55,6 @@ export const getEvaluationByInterviewController = async (
     next(error);
   }
 };
-
 export const getEvaluationByIdController = async (
   req: Request,
   res: Response,
@@ -71,18 +62,14 @@ export const getEvaluationByIdController = async (
 ) => {
   try {
     const evaluationId = req.params.evaluationId;
-
     if (typeof evaluationId !== "string") {
       throw new appError("Invalid evaluation ID", 400);
     }
-
     const userId = req.user.userId;
-
     const evaluation = await getEvaluationById(
       userId,
       evaluationId
     );
-
     res.status(200).json({
       success: true,
       message: "Evaluation fetched successfully",
