@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 
 import {
-  createEvaluation,
+  createAIEvaluation,
   getEvaluationByInterview,
   getEvaluationById,
 } from "../services/interview/evaluation.service.js";
@@ -18,7 +18,7 @@ export const createEvaluationController = async (
   try {
     const validatedData = createEvaluationSchema.parse(req.body);
 
-    const evaluation = await createEvaluation(validatedData);
+    const evaluation = await createAIEvaluation(validatedData.interviewId);
 
     res.status(201).json({
       success: true,
