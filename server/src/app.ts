@@ -14,6 +14,7 @@ import questionRouter from "./routes/question.routes.js";
 import answerRouter from "./routes/answer.routes.js";
 import evaluationRouter from "./routes/evaluation.routes.js";
 import chatRouter from "./routes/chat.routes.js";
+import dashboardRouter from "./routes/dashboard.routes.js";
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use("/api/questions",questionRouter);
 app.use("/api/answers",answerRouter);
 app.use("/api/evaluations",evaluationRouter);
 app.use("/api/chats",chatRouter);
+app.use("/api/dashboard",dashboardRouter);
 
 app.get("/",(_req,res)=>{
     res.json({
