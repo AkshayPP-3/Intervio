@@ -1,5 +1,4 @@
 import { Router } from "express";
-
 import {
   createChatController,
   getUserChatsController,
@@ -7,7 +6,7 @@ import {
   createMessageController,
   getChatMessagesController,
 } from "../controllers/chat.controller.js";
-
+import { aiRateLimiter } from "../middleware/rateLimit.niddleware.js";
 import authMiddleware from "../middleware/auth.middleware.js";
 
 const chatRouter = Router();
@@ -32,6 +31,7 @@ chatRouter.get(
 
 chatRouter.post(
   "/:chatId/messages",
+  aiRateLimiter,
   authMiddleware,
   createMessageController
 );
