@@ -1,7 +1,7 @@
 import { Router } from "express";
 import resumeController from "../controllers/resume.controller.js";
 import authMiddleware from "../middleware/auth.middleware.js";
-import upload from "../config/cloudinary.js";
+import upload from "../middleware/upload.middleware.js";
 
 const resumeRouter = Router();
 
