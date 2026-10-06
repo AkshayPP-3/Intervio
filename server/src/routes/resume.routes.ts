@@ -1,6 +1,7 @@
 import { Router } from "express";
 import resumeController from "../controllers/resume.controller.js";
 import authMiddleware from "../middleware/auth.middleware.js";
+import upload from "../config/cloudinary.js";
 
 const resumeRouter = Router();
 
@@ -9,7 +10,12 @@ resumeRouter.post(
     authMiddleware,
     resumeController.createResume,
 );
-
+resumeRouter.post(
+    "/upload",
+    authMiddleware,
+    upload.single("file"),
+    resumeController.uploadResume,
+);
 resumeRouter.get(
     "/",
     authMiddleware,
