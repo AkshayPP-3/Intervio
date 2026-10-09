@@ -4,37 +4,31 @@ import appError from "../utils/appError.js";
 
 const storage = multer.memoryStorage();
 
+const allowedMimeTypes = [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/octet-stream",
+];
+
+const allowedExtensions = [".pdf", ".doc", ".docx"];
+
 const fileFilter: multer.Options["fileFilter"] = (
     _req,
     file,
     cb
 ) => {
-    const allowedMimeTypes = [
-        "application/pdf",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "application/octet-stream",
-    ];
-
-    const allowedExtensions = [
-        ".pdf",
-        ".doc",
-        ".docx",
-    ];
-
     const fileExtension = path
         .extname(file.originalname)
         .toLowerCase();
 
-    const isValidMimeType = allowedMimeTypes.includes(
-        file.mimetype
-    );
+    console.log("Filename:", file.originalname);
+    console.log("MIME type:", file.mimetype);
 
-    const isValidExtension = allowedExtensions.includes(
-        fileExtension
-    );
-
-    if (isValidMimeType && isValidExtension) {
+    if (
+        allowedExtensions.includes(fileExtension) &&
+        allowedMimeTypes.includes(file.mimetype)
+    ) {
         cb(null, true);
     } else {
         cb(
