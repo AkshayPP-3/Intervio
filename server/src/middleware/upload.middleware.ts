@@ -1,3 +1,4 @@
+
 import multer from "multer";
 import path from "path";
 import appError from "../utils/appError.js";
@@ -9,6 +10,7 @@ const allowedMimeTypes = [
     "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/octet-stream",
+    "text/plain",
 ];
 
 const allowedExtensions = [".pdf", ".doc", ".docx"];
@@ -22,13 +24,13 @@ const fileFilter: multer.Options["fileFilter"] = (
         .extname(file.originalname)
         .toLowerCase();
 
+    const isValidExtension = allowedExtensions.includes(fileExtension);
+    const isValidMimeType = allowedMimeTypes.includes(file.mimetype);
+
     console.log("Filename:", file.originalname);
     console.log("MIME type:", file.mimetype);
 
-    if (
-        allowedExtensions.includes(fileExtension) &&
-        allowedMimeTypes.includes(file.mimetype)
-    ) {
+    if (isValidExtension && isValidMimeType) {
         cb(null, true);
     } else {
         cb(
