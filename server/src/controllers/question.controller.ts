@@ -15,7 +15,7 @@ export const createQuestionController = async (
   try {
     const validatedData = createQuestionSchema.parse(req.body);
 
-    const question = await createQuestion(validatedData);
+    const question = await createQuestion(req.user!.userId, validatedData);
 
     res.status(201).json({
       success: true,
@@ -39,7 +39,10 @@ export const getQuestionsByInterviewController = async (
       throw new appError("Invalid interview ID", 400);
     }
 
-    const questions = await getQuestionsByInterview(interviewId);
+    const questions = await getQuestionsByInterview(
+      req.user!.userId,
+      interviewId
+    );
 
     res.status(200).json({
       success: true,
@@ -63,7 +66,7 @@ export const getQuestionByIdController = async (
       throw new appError("Invalid question ID", 400);
     }
 
-    const question = await getQuestionById(questionId);
+    const question = await getQuestionById(req.user!.userId, questionId);
 
     res.status(200).json({
       success: true,
