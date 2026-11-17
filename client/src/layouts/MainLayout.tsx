@@ -1,4 +1,5 @@
 import { Sidebar } from '../components/common/Sidebar'
+import { Dashboard } from '../features/dashboard/Dashboard'
 
 export function MainLayout() {
   return (
@@ -11,10 +12,7 @@ export function MainLayout() {
           </header>
           
           <main className='p-8'>
-            <h2 className='text-2xl font-bold text-slate-900'>Your Dashboard</h2>
-            <p className='text-slate-500 mt-2'>
-              Track your progress and prepare for your next interview.
-            </p>
+            <Dashboard />
           </main>
         </div>
     </div>
