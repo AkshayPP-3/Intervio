@@ -1,11 +1,7 @@
-import { Sidebar } from "./components/common/Sidebar"
+import {MainLayout} from './layouts/MainLayout';
 
 function App() {
-  return (
-    <div>
-      <Sidebar />
-    </div>
-  )
+  return <MainLayout />;
 }
 
-export default App
+export default App;
