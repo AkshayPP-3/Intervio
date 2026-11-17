@@ -1,5 +1,5 @@
 import {StatsCard} from './components/StatsCard';
-
+import {RecentInterviews} from './components/RecentInterviews';
 const stats = [
   { title: "Total Interviews", value: 12 },
   { title: "Average Score", value: "85%" },
@@ -26,6 +26,9 @@ export function Dashboard(){
           value = {stat.value}
           />
         ))}
+      </div>
+      <div className="mt-8">
+        <RecentInterviews />
       </div>
     </div>
   )
