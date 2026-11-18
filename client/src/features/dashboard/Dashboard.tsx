@@ -15,7 +15,7 @@ export function Dashboard(){
         <h2 className='text-2xl font-bold text-slate-900'>
           Your Dashboard
         </h2>
-        <p className='text-scale-500 mt-2'>
+        <p className='text-slate-500 mt-2'>
           Track your progress and prepare for your next interview.
         </p>
       </div>
