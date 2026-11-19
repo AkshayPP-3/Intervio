@@ -12,8 +12,10 @@ import {
   saveSession,
 } from '../features/dashboard/Dashboard'
 import type { SessionUser } from '../features/dashboard/Dashboard'
+import { InterviewList } from '../features/interview/pages/InterviewList'
 
 //search targets
+
 const PAGES = [
   { name: 'Dashboard', path: '/dashboard', words: 'home overview stats' },
   { name: 'Interviews', path: '/interviews', words: 'interview mock history start' },
@@ -105,7 +107,7 @@ function SearchBox() {
   )
 }
 
-//notifications
+// notifications
 
 type PendingInterview = { id: string; title: string; status: string }
 
@@ -322,6 +324,7 @@ function AuthCard({ onDone }: { onDone: (user: SessionUser) => void }) {
 }
 
 //placeholder for pages
+
 function ComingSoon() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
@@ -343,6 +346,7 @@ function ComingSoon() {
 }
 
 //layout
+
 export function MainLayout(): ReactNode {
   const navigate = useNavigate()
   const [authed, setAuthed] = useState<boolean>(() => !!getToken())
@@ -410,6 +414,7 @@ export function MainLayout(): ReactNode {
           <Routes>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/interviews" element={<InterviewList />} />
             <Route path="*" element={<ComingSoon />} />
           </Routes>
         </main>
