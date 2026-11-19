@@ -97,7 +97,7 @@ export function InterviewList() {
                   key={stream.name}
                   type="button"
                   onClick={() => selectStream(stream)}
-                  className={`min-h-[72px] rounded-md border p-3 text-left transition ${
+                  className={`min-h-72px rounded-md border p-3 text-left transition ${
                     active
                       ? 'border-blue-400/70 bg-slate-800/90 shadow-[0_0_0_1px_rgba(96,165,250,0.12)]'
                       : 'border-slate-700/90 bg-slate-800/80 hover:border-slate-600 hover:bg-slate-800'
