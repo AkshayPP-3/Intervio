@@ -1,0 +1,106 @@
+import { prisma } from "../../config/prisma";
+import appError from "../../utils/appError.js";
+import { generateInterviewQuestions } from "../ai/gemini.service";
+export const createInterview = async (userId, data) => {
+    const interview = await prisma.interview.create({
+        data: {
+            userId,
+            title: data.title,
+            role: data.role,
+            ...(data.difficulty !== undefined && {
+                difficulty: data.difficulty,
+            }),
+            ...(data.language !== undefined && {
+                language: data.language,
+            }),
+        },
+    });
+    const generatedQuestions = await generateInterviewQuestions({
+        role: data.role,
+        ...(data.difficulty !== undefined && {
+            difficulty: data.difficulty,
+        }),
+        ...(data.language !== undefined && {
+            language: data.language,
+        }),
+    });
+    const questions = await prisma.question.createMany({
+        data: generatedQuestions.map((question) => ({
+            interviewId: interview.id,
+            questionText: question.questionText,
+            questionType: question.questionType,
+            order: question.order,
+        })),
+    });
+    return {
+        interview,
+        questionsCreated: questions.count,
+    };
+};
+export const getInterviewById = async (userId, interviewId) => {
+    const interview = await prisma.interview.findFirst({
+        where: {
+            id: interviewId,
+            userId,
+        },
+        include: {
+            questions: true,
+            evaluation: true,
+        },
+    });
+    if (!interview) {
+        throw new appError("Interview not found", 404);
+    }
+    return interview;
+};
+export const getUserInterviews = async (userId) => {
+    const interviews = await prisma.interview.findMany({
+        where: {
+            userId,
+        },
+        orderBy: {
+            createdAt: "desc",
+        },
+    });
+    return interviews;
+};
+export const updateInterviewStatus = async (userId, interviewId, status) => {
+    const interview = await prisma.interview.findFirst({
+        where: {
+            id: interviewId,
+            userId,
+        },
+    });
+    if (!interview) {
+        throw new appError("Interview not found", 404);
+    }
+    const updatedInterview = await prisma.interview.update({
+        where: {
+            id: interviewId,
+        },
+        data: {
+            status,
+        },
+    });
+    return updatedInterview;
+};
+export const deleteInterview = async (userId, interviewId) => {
+    const interview = await prisma.interview.findFirst({
+        where: {
+            id: interviewId,
+            userId,
+        },
+    });
+    if (!interview) {
+        throw new appError("Interview not found", 404);
+    }
+    await prisma.interview.delete({
+        where: {
+            id: interviewId,
+        },
+    });
+    return {
+        message: "Interview deleted successfully",
+    };
+};
+//# sourceMappingURL=interview.service.js.map

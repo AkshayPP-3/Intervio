@@ -1,0 +1,52 @@
+import { createQuestion, getQuestionsByInterview, getQuestionById, } from "../services/interview/question.service.js";
+import appError from "../utils/appError.js";
+import { createQuestionSchema } from "../schemas/question.schema.js";
+export const createQuestionController = async (req, res, next) => {
+    try {
+        const validatedData = createQuestionSchema.parse(req.body);
+        const question = await createQuestion(req.user.userId, validatedData);
+        res.status(201).json({
+            success: true,
+            message: "Question created successfully",
+            data: question,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+export const getQuestionsByInterviewController = async (req, res, next) => {
+    try {
+        const interviewId = req.params.interviewId;
+        if (typeof interviewId !== "string") {
+            throw new appError("Invalid interview ID", 400);
+        }
+        const questions = await getQuestionsByInterview(req.user.userId, interviewId);
+        res.status(200).json({
+            success: true,
+            message: "Questions fetched successfully",
+            data: questions,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+export const getQuestionByIdController = async (req, res, next) => {
+    try {
+        const { questionId } = req.params;
+        if (!questionId || Array.isArray(questionId)) {
+            throw new appError("Invalid question ID", 400);
+        }
+        const question = await getQuestionById(req.user.userId, questionId);
+        res.status(200).json({
+            success: true,
+            message: "Question fetched successfully",
+            data: question,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+//# sourceMappingURL=question.controller.js.map
