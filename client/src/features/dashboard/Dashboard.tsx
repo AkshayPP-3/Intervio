@@ -291,9 +291,9 @@ function Card({
   className?: string
 }) {
   return (
-    <section className={`rounded-xl border border-slate-700 bg-slate-800 p-4 ${className}`}>
+    <section className={`rounded-lg border border-slate-800/90 bg-slate-800/95 p-3 ${className}`}>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-sm font-bold text-white">{title}</h2>
+        <h2 className="text-xs font-bold text-white">{title}</h2>
         {action}
       </div>
       {children}
@@ -308,10 +308,10 @@ const primaryBtn =
 
 function StatCard({ title, value, hint }: { title: string; value: string; hint?: string }) {
   return (
-    <div className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-3">
-      <p className="text-xs text-slate-300">{title}</p>
-      <p className="mt-1 text-2xl font-bold text-white">{value}</p>
-      {hint && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
+    <div className="h-86px rounded-lg border border-slate-800/90 bg-slate-800/95 px-3 py-3">
+      <p className="text-[11px] text-slate-300">{title}</p>
+      <p className="mt-2 text-[21px] leading-none font-bold text-white">{value}</p>
+      {hint && <p className="mt-2 text-[10px] text-slate-400">{hint}</p>}
     </div>
   )
 }
@@ -496,17 +496,14 @@ export function Dashboard() {
   const header = (
     <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
       <div className="min-w-0">
-        <h1 className="text-xl font-bold text-white">Overview</h1>
-        <p className="mt-1 text-sm text-blue-300">
+        <h1 className="text-[15px] font-bold text-white">Overview</h1>
+        <p className="mt-1 text-xs text-blue-300">
           {data && data.stats.totalInterviews > 0
             ? `Welcome back, ${userName}. You have completed ${data.stats.completedInterviews} of ${data.stats.totalInterviews} interviews.`
             : `Welcome back, ${userName}. Take your first interview to see your stats.`}
         </p>
       </div>
       <div className="flex gap-2">
-        <button className={ghostBtn} onClick={reload} disabled={loading}>
-          {loading ? 'Refreshing…' : 'Refresh'}
-        </button>
         <button className={ghostBtn} onClick={() => navigate('/reports')}>
           View full report
         </button>
@@ -516,7 +513,7 @@ export function Dashboard() {
 
   if (loading && !data) {
     return (
-      <div className="min-h-screen bg-slate-950 px-4 py-4">
+      <div className="min-h-[calc(100vh-56px)] bg-[#071020] px-4 py-4 md:px-5">
         {header}
         <DashboardSkeleton />
       </div>
@@ -525,7 +522,7 @@ export function Dashboard() {
 
   if (error && !data) {
     return (
-      <div className="min-h-screen bg-slate-950 px-4 py-4">
+      <div className="min-h-[calc(100vh-56px)] bg-[#071020] px-4 py-4 md:px-5">
         {header}
         <div role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 p-5">
           <p className="text-sm font-semibold text-red-200">Could not load your dashboard</p>
@@ -637,7 +634,7 @@ export function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 px-4 py-4">
+    <div className="min-h-[calc(100vh-56px)] bg-[#071020] px-4 py-4 md:px-5">
       {header}
 
       {error && (
@@ -651,36 +648,32 @@ export function Dashboard() {
         </p>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <StatCard
           title="Total interviews"
           value={String(stats.totalInterviews)}
-          hint={`${stats.completedInterviews} completed · ${stats.inProgressInterviews} in progress`}
         />
-        <StatCard title="Average score" value={pct(stats.averageScore)} hint="Across evaluated interviews" />
+        <StatCard title="Average score" value={pct(stats.averageScore)} />
         <StatCard
           title="Questions answered"
           value={answered == null ? '—' : String(answered)}
-          hint="In completed interviews"
         />
-        <StatCard title="Best score" value={pct(stats.bestScore)} hint="Your personal record" />
+        <StatCard title="Practice time" value="0 min" />
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
+      <div className="mt-3 grid grid-cols-1 gap-3 xl:grid-cols-3">
         <Card
-          title="Score trend"
+          title="Score trend (last 7 days)"
           className="xl:col-span-2"
-          action={<span className="text-xs text-slate-400">Last {trend.length || 5} evaluated interviews</span>}
+          action={<span className="rounded-md bg-slate-700/70 px-2 py-1 text-[9px] text-blue-300">Load demo data</span>}
         >
           {trend.length === 0 ? (
-            <div className="flex h-56 flex-col items-center justify-center text-center">
-              <p className="text-sm text-slate-300">No scores yet</p>
-              <p className="mt-1 max-w-xs text-xs text-slate-400">
-                Complete an interview and your score trend will appear here.
-              </p>
-              <button className={`${primaryBtn} mt-3`} onClick={() => setModalOpen(true)}>
-                Start your first interview
-              </button>
+            <div className="relative h-56">
+              <div className="absolute inset-x-0 bottom-0 flex justify-around border-t border-slate-700/30 pt-2 text-[10px] text-slate-400">
+                {['Thu', 'Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Wed'].map((day) => (
+                  <span key={day}>{day}</span>
+                ))}
+              </div>
             </div>
           ) : (
             <div className="h-56">
@@ -714,11 +707,11 @@ export function Dashboard() {
           )}
         </Card>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-1">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-1">
           <Card title="Strengths and weaknesses">
             {scored.length === 0 ? (
               <p className="text-xs leading-5 text-slate-400">
-                Skill analysis appears after your first evaluated interview.
+                Skill analysis appears after your first interview.
               </p>
             ) : (
               <>
@@ -769,26 +762,30 @@ export function Dashboard() {
           </Card>
 
           <Card title="AI suggestion" className="flex flex-col">
-            {suggestion}
+            {stats.totalInterviews === 0 ? (
+              <>
+                <p className="text-[11px] leading-5 text-slate-400">
+                  Upload your resume first so Gemini can ask questions about your real projects.
+                </p>
+                <button className={`${primaryBtn} mt-3 w-fit`} onClick={() => navigate('/resume')}>
+                  Upload resume
+                </button>
+              </>
+            ) : (
+              suggestion
+            )}
           </Card>
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
+      <div className="mt-3 grid grid-cols-1 gap-3 xl:grid-cols-3">
         <Card
           title="Interview history"
           className="xl:col-span-2"
           action={
-            <div className="flex gap-2">
-              {stats.totalInterviews > recentInterviews.length && (
-                <button className={ghostBtn} onClick={() => navigate('/interviews')}>
-                  View all
-                </button>
-              )}
-              <button className={ghostBtn} onClick={() => setModalOpen(true)}>
-                New interview
-              </button>
-            </div>
+            <button className="h-7 rounded-md bg-slate-700/70 px-2 text-[9px] text-blue-300" onClick={() => setModalOpen(true)}>
+              New interview
+            </button>
           }
         >
           {recentInterviews.length === 0 ? (
@@ -826,8 +823,7 @@ export function Dashboard() {
         </Card>
 
         <Card title="Quick practice">
-          <p className="mb-3 text-xs text-slate-400">Starts a 5-question set generated by Gemini.</p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {QUICK_PRACTICE.map((p) => (
               <button
                 key={p.label}
