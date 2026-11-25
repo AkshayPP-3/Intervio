@@ -2,6 +2,8 @@ import { Component, StrictMode } from 'react'
 import type { ErrorInfo, ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext'
+import { APP_NAME } from './utils/constants'
 import './index.css'
 import App from './App.tsx'
 
@@ -38,13 +40,15 @@ class ErrorBoundary extends Component<{ children: ReactNode }, BoundaryState> {
   }
 }
 
-document.title = 'Intervio'
+document.title = APP_NAME
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
       <BrowserRouter>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </BrowserRouter>
     </ErrorBoundary>
   </StrictMode>,
