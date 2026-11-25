@@ -2,7 +2,7 @@
 import type { User } from '../types/user.types'
 
 export const API_URL =
-  (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ?? 'http://localhost:5000/api'
+  (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ?? 'http://localhost:3000/api'
 
 export const TOKEN_KEY = 'intervio_token'
 export const USER_KEY = 'intervio_user'
@@ -83,7 +83,10 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   try {
     res = await fetch(`${API_URL}${path}`, init)
   } catch {
-    throw new ApiError('Cannot reach the server. Check your connection and that the backend is running.', 0)
+    throw new ApiError(
+      `Cannot reach the server at ${API_URL}. Check that the backend is running and that VITE_API_URL in client/.env matches its port.`,
+      0,
+    )
   }
 
   const json = (await res.json().catch(() => null)) as { message?: string; data?: T } | null
