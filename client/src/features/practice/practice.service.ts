@@ -1,8 +1,3 @@
-/* -------------------------------------------------------------------------- */
-/*  Practice data + helpers                                                    */
-/*  "Start set" creates a real interview (Gemini writes 5 questions) through   */
-/*  POST /api/interviews, then the interview room takes over.                  */
-/* -------------------------------------------------------------------------- */
 
 export type PracticeCategory = {
   key: string
