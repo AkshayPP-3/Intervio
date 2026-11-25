@@ -103,7 +103,7 @@ export function Leaderboard() {
           ['Finished interviews', String(reports.length)],
           ['Day streak', String(stats.streak)],
         ].map(([title, value]) => (
-          <div key={title} className="min-h-[86px] rounded-lg border border-slate-800/90 bg-slate-800/95 px-3 py-3">
+          <div key={title} className="min-h-86px rounded-lg border border-slate-800/90 bg-slate-800/95 px-3 py-3">
             <p className="text-[11px] text-slate-300">{title}</p>
             <p className="mt-2 text-[21px] leading-none font-bold text-white">{value}</p>
           </div>
