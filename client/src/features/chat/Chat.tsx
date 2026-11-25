@@ -118,7 +118,7 @@ export function Chat() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-56px)] min-h-[480px] flex-col bg-[#071020] px-4 py-4 md:px-5">
+    <div className="flex h-[calc(100vh-56px)] min-h-480px flex-col bg-[#071020] px-4 py-4 md:px-5">
       <PageHeader
         title="AI Assistant"
         description="Ask Gemini about resumes, interview questions and preparation. Voice input and spoken replies supported."
