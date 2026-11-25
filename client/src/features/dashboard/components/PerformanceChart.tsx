@@ -1,85 +1,49 @@
-import{
-  CartesianGrid,
-  Line,
-  LineChart,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
-const performanceData = [
-  { month: 'Jun', score: 55 },
-  { month: 'Jul', score: 65 },
-  { month: 'Aug', score: 60 },
-  { month: 'Sep', score: 75 },
-  { month: 'Oct', score: 82 },
-  { month: 'Nov', score: 90 },
-]
+export type PerformancePoint = { day: string; score: number }
 
-export function PerformanceChart(){
-  return (
-    <div className='bg-white border border-slate-200 rounded-xl p-6'>
-      <div className='flex items-center justify-between mb-6'>
-        <div>
-          <h3 className='text-lg font-semibold text-slate-900'>
-            Performance Overview
-          </h3>
+type PerformanceChartProps = {
+  data: PerformancePoint[]
+  /** Shown when there are no scores yet. */
+  emptyText?: string
+}
 
-          <p className='text-sm text-slate-500 mt-1'>
-            Your interview scores over time
-          </p>
-        </div>
-
-        <span className='text-xs font-medium text-violet-600 bg-violet-50 px-3 py-2 rounded-lg'>
-          Last 6 Months
-        </span>
+export function PerformanceChart({ data, emptyText = 'No scores yet. Complete an interview to see your trend.' }: PerformanceChartProps) {
+  if (data.length === 0) {
+    return (
+      <div className="flex h-56 items-center justify-center rounded-md border border-dashed border-slate-700/60 px-4 text-center">
+        <p className="max-w-xs text-xs text-slate-400">{emptyText}</p>
       </div>
-
-      <div className='w-full h-72'>
-        <LineChart
-        data = {performanceData}
-        responsive
-        style ={{width:'100%', height:'100%'}}
-        margin = {{top: 10, right:12, left: -15, bottom: 0}}
-        >
-          <CartesianGrid 
-          strokeDasharray="3 3"
-          vertical={false}
-          stroke="#e2e8f0"
+    )
+  }
+  return (
+    <div className="h-56">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data} margin={{ top: 10, right: 12, left: -18, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" />
+          <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#cbd5e1' }} />
+          <YAxis
+            domain={[0, 100]}
+            tickFormatter={(v: number) => `${v}%`}
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 12, fill: '#cbd5e1' }}
           />
-
-          <XAxis 
-          dataKey="month"
-          axisLine={false}
-          tickLine={false}
-          tick={{ fontSize: 12, fill: '#64748b' }}
+          <Tooltip
+            formatter={(v) => [`${v}%`, 'Score']}
+            contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: 8 }}
+            labelStyle={{ color: '#e2e8f0' }}
           />
-
-          <YAxis 
-          domain={[0, 100]}
-          tickFormatter={(value) => `${value}%`}
-          axisLine={false}
-          tickLine={false}
-          tick={{ fontSize: 12, fill: '#64748b' }}
-          />
-
-          <Tooltip 
-          formatter={(value) => [`${value}%`, 'Score']}
-          contentStyle={{
-            borderRadius: '12px',
-            border: '1px solid #e2e8f0',
-            }}
-          />
-          <Line 
-          type="monotone"
-          dataKey="score"
-          stroke="#7c3aed"
-          strokeWidth={3}
-          dot={{ r: 4, fill: '#7c3aed' }}
-          activeDot={{ r: 6 }}
+          <Line
+            type="monotone"
+            dataKey="score"
+            stroke="#60a5fa"
+            strokeWidth={3}
+            dot={{ r: 4, fill: '#60a5fa' }}
+            activeDot={{ r: 6 }}
           />
         </LineChart>
-      </div>
+      </ResponsiveContainer>
     </div>
   )
 }
