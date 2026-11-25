@@ -13,6 +13,7 @@ import {
 } from '../features/dashboard/Dashboard'
 import type { SessionUser } from '../features/dashboard/Dashboard'
 import { InterviewList } from '../features/interview/pages/InterviewList'
+import { Practice } from '../features/practice/Practice'
 
 //search targets
 
@@ -415,6 +416,7 @@ export function MainLayout(): ReactNode {
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/interviews" element={<InterviewList />} />
+            <Route path="/practice" element={<Practice />} />
             <Route path="*" element={<ComingSoon />} />
           </Routes>
         </main>
