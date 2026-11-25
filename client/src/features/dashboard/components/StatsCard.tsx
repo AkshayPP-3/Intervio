@@ -1,12 +1,15 @@
-interface StatsCardProps{
-  title: string;
-  value: string | number;
+type StatsCardProps = {
+  title: string
+  value: string | number
+  hint?: string
 }
-export function StatsCard({title, value}: StatsCardProps){
-  return(
-    <div className="bg-white p-6 rounded-xl border-slate-200">
-      <p className="text-sm text-slate-500">{title}</p>
-      <h3 className="text-3xl font-bold mt-2">{value}</h3>
+
+export function StatsCard({ title, value, hint }: StatsCardProps) {
+  return (
+    <div className="min-h-[86px] rounded-lg border border-slate-800/90 bg-slate-800/95 px-3 py-3">
+      <p className="text-[11px] text-slate-300">{title}</p>
+      <p className="mt-2 text-[21px] leading-none font-bold text-white">{value}</p>
+      {hint && <p className="mt-2 text-[10px] text-slate-400">{hint}</p>}
     </div>
   )
 }
