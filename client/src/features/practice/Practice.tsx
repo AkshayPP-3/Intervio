@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { apiRequest } from '../dashboard/Dashboard'
+import { api } from '../../services/api'
 import { useSpeech } from '../interview/hooks/useSpeech'
 import { LANGUAGE_LOCALES, createInterview } from '../interview/interview.service'
 import {
@@ -55,7 +55,7 @@ export function Practice() {
 
   useEffect(() => {
     let cancelled = false
-    apiRequest<InterviewLite[]>('/interviews')
+    api.get<InterviewLite[]>('/interviews')
       .then((d) => {
         if (!cancelled) setList(d)
       })
