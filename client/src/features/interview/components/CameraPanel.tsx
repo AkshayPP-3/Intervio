@@ -4,6 +4,8 @@ type CamState = 'starting' | 'on' | 'off' | 'denied' | 'unsupported' | 'error'
 
 type Props = {
   status: 'speaking' | 'listening' | 'idle'
+  subtitle?: string | null
+  subtitleLabel?: string
 }
 
 const MESSAGES: Record<Exclude<CamState, 'on'>, string> = {
@@ -18,7 +20,7 @@ const cameraSupported = () =>
   typeof navigator !== 'undefined' && typeof navigator.mediaDevices?.getUserMedia === 'function'
 
 /** Self-view only. Nothing from the camera is recorded or uploaded. */
-export function CameraPanel({ status }: Props) {
+export function CameraPanel({ status, subtitle, subtitleLabel = 'Subtitles · English' }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const attemptRef = useRef(0)
@@ -102,6 +104,16 @@ export function CameraPanel({ status }: Props) {
               Turn on camera
             </button>
           )}
+        </div>
+      )}
+
+      {subtitle && (
+        <div
+          aria-live="polite"
+          className="pointer-events-none absolute inset-x-3 bottom-14 rounded-lg border border-slate-700/80 bg-slate-950/85 px-3 py-2 backdrop-blur-sm"
+        >
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-blue-300">{subtitleLabel}</p>
+          <p className="mt-0.5 line-clamp-3 text-xs leading-5 text-white">{subtitle}</p>
         </div>
       )}
 
