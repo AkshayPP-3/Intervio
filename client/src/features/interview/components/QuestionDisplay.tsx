@@ -31,7 +31,7 @@ export function QuestionDisplay({
     <section className="rounded-xl border border-slate-700 bg-slate-800 p-5" aria-live="polite">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-blue-300">
-          Question {index + 1} of {total}
+          Question {index + 1} of {total} · English Subtitles
         </p>
         {question.questionType && (
           <span className="rounded-full bg-slate-700 px-2.5 py-0.5 text-xs text-slate-200">
