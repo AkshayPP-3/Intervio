@@ -2,6 +2,7 @@ import { Router } from "express";
 
 import authMiddleware from "../middleware/auth.middleware.js";
 import validate from "../middleware/validate.middleware.js";
+import { uploadAudio } from "../middleware/upload.middleware.js";
 
 import {
   createInterview,
@@ -9,6 +10,8 @@ import {
   getUserInterviews,
   updateInterviewStatus,
   deleteInterview,
+  speechToTextController,
+  textToSpeechController,
 } from "../controllers/interview.controller.js";
 
 import {
@@ -29,6 +32,17 @@ interviewRouter.post(
 interviewRouter.get(
   "/",
   getUserInterviews
+);
+
+interviewRouter.post(
+  "/speech/stt",
+  uploadAudio.single("audio"),
+  speechToTextController
+);
+
+interviewRouter.post(
+  "/speech/tts",
+  textToSpeechController
 );
 
 interviewRouter.get(
