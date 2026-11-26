@@ -1,6 +1,6 @@
-import { prisma } from "../../config/prisma";
+import { prisma } from "../../config/prisma.js";
 import appError from "../../utils/appError.js";
-import {generateInterviewQuestions} from "../ai/gemini.service";
+import {generateInterviewQuestions} from "../ai/gemini.service.js";
 
 interface CreateInterviewData {
   title: string;
@@ -29,15 +29,21 @@ export const createInterview = async (
     },
   });
 
-  const generatedQuestions = await generateInterviewQuestions({
-    role: data.role,
-    ...(data.difficulty !== undefined && {
-      difficulty: data.difficulty,
-    }),
-    ...(data.language !== undefined && {
-      language: data.language,
-    }),
-  });
+  let generatedQuestions;
+  try {
+    generatedQuestions = await generateInterviewQuestions({
+      role: data.role,
+      ...(data.difficulty !== undefined && {
+        difficulty: data.difficulty,
+      }),
+      ...(data.language !== undefined && {
+        language: data.language,
+      }),
+    });
+  } catch (error) {
+    await prisma.interview.delete({ where: { id: interview.id } }).catch(() => {});
+    throw error;
+  }
 
   const questions = await prisma.question.createMany({
     data: generatedQuestions.map((question) => ({
@@ -63,7 +69,14 @@ export const getInterviewById = async (
       userId,
     },
     include: {
-      questions: true,
+      questions: {
+        orderBy: {
+          order: "asc",
+        },
+        include: {
+          answer: true,
+        },
+      },
       evaluation: true,
     },
   });
