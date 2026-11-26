@@ -5,6 +5,7 @@ type Props = {
   onChange: (value: string) => void
   readOnly: boolean
   listening: boolean
+  transcribing?: boolean
   interim: string
   sttSupported: boolean
   sttError: string | null
@@ -23,6 +24,7 @@ export function AnswerInput({
   onChange,
   readOnly,
   listening,
+  transcribing = false,
   interim,
   sttSupported,
   sttError,
@@ -96,8 +98,8 @@ export function AnswerInput({
           readOnly
             ? ''
             : sttSupported
-              ? `Press “Start speaking” and answer in ${language}, or type here. You can edit the text before submitting.`
-              : 'Type your answer here.'
+              ? `Press “Start speaking” and answer in ${language} (or English), or type here. Gemini understands Indian languages and replies in English.`
+              : `Type your answer here in ${language} or English.`
         }
         className="mt-3 h-44 w-full resize-y rounded-lg border border-slate-600 bg-slate-900 p-3 text-sm leading-6 text-slate-100 outline-none placeholder:text-slate-500 read-only:opacity-80 focus:border-blue-400"
       />
@@ -105,7 +107,13 @@ export function AnswerInput({
       {listening && (
         <p className="mt-2 flex items-center gap-2 text-xs text-red-300">
           <span className="size-2 animate-pulse rounded-full bg-red-400" />
-          Listening… {interim && <span className="italic text-slate-300">{interim}</span>}
+          Listening ({language})… {interim && <span className="italic text-slate-300">{interim}</span>}
+        </p>
+      )}
+      {!listening && transcribing && (
+        <p className="mt-2 flex items-center gap-2 text-xs text-blue-300">
+          <span className="size-2 animate-pulse rounded-full bg-blue-400" />
+          Refining {language} speech transcript with Sarvam AI…
         </p>
       )}
 
