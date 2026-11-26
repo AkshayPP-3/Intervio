@@ -1,23 +1,16 @@
+import { api } from '../../services/api'
 import { mapLimit } from '../../utils/helpers'
-import { getAnswer, getEvaluation, getInterview, listInterviews } from '../interview/interview.service'
+import { getAnswer, getInterview } from '../interview/interview.service'
 import type { Evaluation, Interview, InterviewDetail, Question } from '../../types/interview.types'
 
 export type Report = { interview: Interview; evaluation: Evaluation }
 
 /**
- * Every completed interview with its evaluation, newest first.
- * The server has no "list evaluations" endpoint, so we fetch each one
- * (a few at a time) for the latest 40 completed interviews.
+ * Every completed interview with its evaluation, newest first,
+ * fetched in a single request.
  */
-export async function listReports(max = 40): Promise<Report[]> {
-  const all = await listInterviews()
-  const done = all.filter((i) => i.status === 'COMPLETED').slice(0, max)
-  const evaluations = await mapLimit(done, 5, (i) => getEvaluation(i.id).catch(() => null))
-  return done.flatMap((interview, k) => {
-    const evaluation = evaluations[k]
-    return evaluation ? [{ interview, evaluation }] : []
-  })
-}
+export const listReports = (max = 40): Promise<Report[]> =>
+  api.get<Report[]>(`/evaluations?limit=${max}`)
 
 export type ReportDetail = {
   interview: InterviewDetail
@@ -29,12 +22,20 @@ export type ReportDetail = {
 export async function getReportDetail(interviewId: string): Promise<ReportDetail> {
   const interview = await getInterview(interviewId)
   const questions = [...interview.questions].sort((a, b) => a.order - b.order)
-  const saved = await mapLimit(questions, 5, (q) => getAnswer(q.id).catch(() => null))
   const answers: Record<string, string> = {}
-  questions.forEach((q, i) => {
-    const text = saved[i]?.answerText
-    if (text != null) answers[q.id] = text
-  })
+
+  const hasEmbeddedAnswers = questions.some((q) => q.answer !== undefined)
+  if (hasEmbeddedAnswers) {
+    questions.forEach((q) => {
+      if (q.answer?.answerText != null) answers[q.id] = q.answer.answerText
+    })
+  } else {
+    const saved = await mapLimit(questions, 5, (q) => getAnswer(q.id).catch(() => null))
+    questions.forEach((q, i) => {
+      const text = saved[i]?.answerText
+      if (text != null) answers[q.id] = text
+    })
+  }
   return { interview, questions, answers }
 }
 
