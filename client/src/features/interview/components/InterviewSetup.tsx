@@ -124,7 +124,7 @@ export function InterviewSetup({ initialRole }: InterviewSetupProps) {
             </label>
 
             <label className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-              Language
+              Your speaking language
               <select className={field} value={language} onChange={(e) => setLanguage(e.target.value)}>
                 {LANGUAGES.map((l) => (
                   <option key={l}>{l}</option>
@@ -212,7 +212,7 @@ export function InterviewSetup({ initialRole }: InterviewSetupProps) {
               <li className="before:mr-1.5 before:text-slate-500 before:content-['▸']">Allow camera and microphone access</li>
               <li className="before:mr-1.5 before:text-slate-500 before:content-['▸']">Sit in a quiet, well-lit place</li>
               <li className="before:mr-1.5 before:text-slate-500 before:content-['▸']">Use headphones to reduce echo</li>
-              <li className="before:mr-1.5 before:text-slate-500 before:content-['▸']">Speech recognition works best in English</li>
+              <li className="before:mr-1.5 before:text-slate-500 before:content-['▸']">Questions are in English; speak in English or your selected Indian language</li>
             </ul>
           </section>
         </aside>
