@@ -15,7 +15,10 @@ export const createAnswerController = async (
   try {
     const validatedData = createAnswerSchema.parse(req.body);
 
-    const answer = await createAnswer(validatedData);
+    const answer = await createAnswer({
+      ...validatedData,
+      userId: req.user?.userId,
+    });
 
     res.status(201).json({
       success: true,
