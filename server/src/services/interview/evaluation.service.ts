@@ -225,3 +225,26 @@ export const createAIEvaluation = async (
 
   return evaluation;
 };
+
+export const getUserReports = async (userId: string, limit = 40) => {
+  const safeLimit = Math.min(Math.max(limit, 1), 100);
+  const interviews = await prisma.interview.findMany({
+    where: {
+      userId,
+      status: "COMPLETED",
+      evaluation: { isNot: null },
+    },
+    orderBy: { createdAt: "desc" },
+    take: safeLimit,
+    include: {
+      evaluation: true,
+    },
+  });
+
+  return interviews
+    .filter((item) => item.evaluation !== null)
+    .map(({ evaluation, ...interview }) => ({
+      interview,
+      evaluation: evaluation!,
+    }));
+};
