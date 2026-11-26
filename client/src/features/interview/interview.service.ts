@@ -34,17 +34,38 @@ export const getAnswer = (questionId: string) => getOrNull<Answer>(`/answers/que
  * The server only allows ONE answer per question (409 on a second POST), so if
  * the answer already exists we return the saved text instead of failing.
  */
-export async function saveAnswer(questionId: string, answerText: string): Promise<string> {
+export async function saveAnswer(
+  questionId: string,
+  answerText: string,
+): Promise<{ answerText: string; reaction: string | null }> {
   try {
-    const a = await api.post<Answer>('/answers', { questionId, answerText })
-    return a.answerText ?? answerText
+    const a = await api.post<Answer & { reaction?: string | null }>('/answers', { questionId, answerText })
+    return {
+      answerText: a.answerText ?? answerText,
+      reaction: a.reaction ?? null,
+    }
   } catch (e) {
     if (e instanceof ApiError && e.status === 409) {
       const existing = await getAnswer(questionId)
-      if (existing?.answerText) return existing.answerText
+      if (existing?.answerText) return { answerText: existing.answerText, reaction: null }
     }
     throw e
   }
+}
+
+export async function transcribeSpeech(audioBlob: Blob, language?: string | null): Promise<string> {
+  const form = new FormData()
+  form.append('audio', audioBlob, 'answer.webm')
+  if (language) form.append('language', language)
+  const res = await api.upload<{ transcript: string }>('/interviews/speech/stt', form)
+  return res.transcript ?? ''
+}
+
+export async function synthesizeSpeech(text: string): Promise<{ audioBase64: string; mimeType: string }> {
+  return api.post<{ audioBase64: string; mimeType: string }>('/interviews/speech/tts', {
+    text,
+    languageCode: 'en-IN',
+  })
 }
 
 export const getEvaluation = (interviewId: string) => getOrNull<Evaluation>(`/evaluations/interview/${interviewId}`)
