@@ -18,6 +18,7 @@ export type Question = {
   questionText: string
   questionType: string | null
   order: number
+  answer?: Answer | null
 }
 
 export type Answer = {
@@ -51,6 +52,7 @@ export type DashboardData = {
     totalInterviews: number
     completedInterviews: number
     inProgressInterviews: number
+    answeredQuestions?: number
     averageScore: number | null
     bestScore: number | null
   }
