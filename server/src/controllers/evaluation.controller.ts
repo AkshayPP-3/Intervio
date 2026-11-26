@@ -4,11 +4,32 @@ import {
   createAIEvaluation,
   getEvaluationByInterview,
   getEvaluationById,
+  getUserReports,
 } from "../services/interview/evaluation.service.js";
 
 import { createEvaluationSchema } from "../schemas/evaluation.schema.js";
 
 import appError from "../utils/appError.js";
+
+export const getUserReportsController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = req.user.userId;
+    const rawLimit = Number(req.query.limit);
+    const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : 40;
+    const reports = await getUserReports(userId, limit);
+    res.status(200).json({
+      success: true,
+      message: "Reports fetched successfully",
+      data: reports,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const createEvaluationController = async (
   req: Request,
