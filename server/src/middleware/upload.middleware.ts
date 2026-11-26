@@ -51,4 +51,19 @@ const upload = multer({
     },
 });
 
+export const uploadAudio = multer({
+    storage,
+    limits: {
+        fileSize: 10 * 1024 * 1024,
+        files: 1,
+    },
+    fileFilter: (_req, file, cb) => {
+        if (file.mimetype.startsWith("audio/") || file.mimetype === "application/octet-stream") {
+            cb(null, true);
+        } else {
+            cb(new appError("Only audio files are allowed", 400));
+        }
+    },
+});
+
 export default upload;
