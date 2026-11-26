@@ -45,6 +45,11 @@ function useDashboard() {
         setData(dashboard)
         setLoading(false)
 
+        if (typeof dashboard.stats.answeredQuestions === 'number') {
+          setAnswered(dashboard.stats.answeredQuestions)
+          return
+        }
+
         setAnswered(null)
         if (dashboard.stats.completedInterviews === 0) {
           setAnswered(0)
