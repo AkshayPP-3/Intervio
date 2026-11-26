@@ -55,7 +55,10 @@ export function InterviewRoom() {
   const [speakSeconds, setSpeakSeconds] = useState(0)
   const [autoRead, setAutoRead] = useState(true)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [reaction, setReaction] = useState<{ questionId: string; text: string; nextIdx: number | null } | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+  const micStartDraftRef = useRef('')
+  const micQuestionIdRef = useRef<string | undefined>(undefined)
 
   const language = interview?.language ?? 'English'
   const locale = localeFor(interview?.language)
@@ -65,11 +68,33 @@ export function InterviewRoom() {
   const answeredCount = questions.filter((q) => answers[q.id] !== undefined).length
   const allAnswered = questions.length > 0 && answeredCount === questions.length
 
+  const savingRef = useRef(saving)
+  const isAnsweredRef = useRef(isAnswered)
+  const questionIdRef = useRef(question?.id)
+  useEffect(() => {
+    savingRef.current = saving
+    isAnsweredRef.current = isAnswered
+    questionIdRef.current = question?.id
+  })
+
   const appendSpoken = useCallback((chunk: string) => {
     if (!chunk) return
     setDraft((d) => (d && !d.endsWith(' ') ? `${d} ${chunk}` : `${d}${chunk}`).slice(0, MAX_ANSWER))
   }, [])
-  const speech = useSpeech(locale, appendSpoken)
+
+  const applySarvamTranscript = useCallback((transcript: string) => {
+    if (savingRef.current || isAnsweredRef.current) return
+    if (!micQuestionIdRef.current || micQuestionIdRef.current !== questionIdRef.current) return
+    const base = micStartDraftRef.current.trim()
+    const combined = base ? `${base} ${transcript}` : transcript
+    setDraft(combined.slice(0, MAX_ANSWER))
+  }, [])
+
+  const speech = useSpeech(locale, appendSpoken, {
+    ttsLocale: 'en-IN',
+    useSarvam: true,
+    onSarvamTranscript: applySarvamTranscript,
+  })
   const { speak, stopSpeaking, stopListening, startListening, listening } = speech
 
   //loading
@@ -88,14 +113,20 @@ export function InterviewRoom() {
         const qs = [...iv.questions].sort((a, b) => a.order - b.order)
         if (qs.length === 0) throw new Error('This interview has no questions. Please start a new interview.')
 
-        // The interview endpoint does not include answers, so fetch them per question.
-        const saved = await Promise.all(qs.map((q) => getAnswer(q.id)))
-        if (cancelled) return
         const map: Record<string, string> = {}
-        saved.forEach((a, i) => {
-          const q = qs[i]
-          if (q && a?.answerText != null) map[q.id] = a.answerText
-        })
+        const hasEmbeddedAnswers = qs.some((q) => q.answer !== undefined)
+        if (hasEmbeddedAnswers) {
+          qs.forEach((q) => {
+            if (q.answer?.answerText != null) map[q.id] = q.answer.answerText
+          })
+        } else {
+          const saved = await Promise.all(qs.map((q) => getAnswer(q.id)))
+          if (cancelled) return
+          saved.forEach((a, i) => {
+            const q = qs[i]
+            if (q && a?.answerText != null) map[q.id] = a.answerText
+          })
+        }
 
         setInterview(iv)
         setQuestions(qs)
@@ -187,10 +218,25 @@ export function InterviewRoom() {
     if (!target || i === idx) return
     stopListening()
     stopSpeaking()
+    setReaction(null)
     setActionError(null)
     setSpeakSeconds(0)
     setIdx(i)
     setDraft(answers[target.id] === undefined ? loadDraft(target.id) : '')
+  }
+
+  async function continueAfterReaction() {
+    if (!reaction) return
+    stopSpeaking()
+    const nextIdx = reaction.nextIdx
+    setReaction(null)
+    if (nextIdx === null) {
+      await runEvaluation()
+      return
+    }
+    setSpeakSeconds(0)
+    setIdx(nextIdx)
+    setDraft(loadDraft(questions[nextIdx]?.id))
   }
 
   async function runEvaluation() {
@@ -225,12 +271,23 @@ export function InterviewRoom() {
     setActionError(null)
     try {
       const saved = await saveAnswer(question.id, text)
-      const next = { ...answers, [question.id]: saved }
+      const next = { ...answers, [question.id]: saved.answerText }
       setAnswers(next)
       saveDraft(question.id, '')
 
       const open = questions.findIndex((q, i) => i > idx && next[q.id] === undefined)
       const anyOpen = open !== -1 ? open : questions.findIndex((q) => next[q.id] === undefined)
+
+      if (saved.reaction) {
+        setReaction({
+          questionId: question.id,
+          text: saved.reaction,
+          nextIdx: anyOpen === -1 ? null : anyOpen,
+        })
+        if (autoRead) speak(saved.reaction)
+        return
+      }
+
       if (anyOpen === -1) {
         setSaving(false)
         await runEvaluation()
@@ -376,7 +433,9 @@ export function InterviewRoom() {
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-white">{interview.title}</p>
           <p className="truncate text-xs text-slate-400">
-            {[interview.role, interview.difficulty, language].filter(Boolean).join(' · ')}
+            {[interview.role, interview.difficulty, `Questions: English`, `Voice: ${language}`]
+              .filter(Boolean)
+              .join(' · ')}
           </p>
         </div>
         <div className="ml-auto flex items-center gap-4">
@@ -426,7 +485,11 @@ export function InterviewRoom() {
 
       <div className="mx-auto grid w-full max-w-7xl flex-1 gap-4 p-4 lg:grid-cols-[1.1fr_1fr]">
         <div className="flex flex-col gap-4">
-          <CameraPanel status={status} />
+          <CameraPanel
+            status={status}
+            subtitle={reaction ? reaction.text : question.questionText}
+            subtitleLabel={reaction ? 'Gemini reaction · English' : `Question ${idx + 1} · English`}
+          />
 
           <nav aria-label="Questions" className="rounded-xl border border-slate-700 bg-slate-800 p-4">
             <p className="text-xs font-semibold text-slate-300">Questions</p>
@@ -482,16 +545,53 @@ export function InterviewRoom() {
             onChange={setDraft}
             readOnly={isAnswered}
             listening={speech.listening}
+            transcribing={speech.transcribing}
             interim={speech.interim}
             sttSupported={speech.sttSupported}
             sttError={speech.sttError}
             language={language}
             speakSeconds={speakSeconds}
             maxLength={MAX_ANSWER}
-            onMicToggle={() => (speech.listening ? stopListening() : startListening())}
+            onMicToggle={() => {
+              if (speech.listening) {
+                stopListening()
+              } else {
+                micStartDraftRef.current = draft
+                micQuestionIdRef.current = question.id
+                startListening()
+              }
+            }}
             onClear={() => setDraft('')}
             onShortcutSubmit={() => void submit()}
           />
+
+          {reaction && reaction.questionId === question.id && (
+            <section
+              aria-live="polite"
+              className="rounded-xl border border-blue-500/40 bg-blue-500/10 p-4"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-blue-300">
+                  Gemini Interviewer Reaction · English
+                </p>
+                {speech.ttsSupported && (
+                  <button
+                    type="button"
+                    onClick={() => (speech.speaking ? stopSpeaking() : speak(reaction.text))}
+                    className="h-7 rounded-md bg-slate-800 px-2.5 text-xs font-medium text-blue-300 hover:bg-slate-700"
+                  >
+                    {speech.speaking ? 'Stop' : 'Replay reaction'}
+                  </button>
+                )}
+              </div>
+              <p className="mt-2 text-sm leading-6 text-white">{reaction.text}</p>
+              <div className="mt-3 flex justify-end">
+                <button type="button" className={primaryBtn} onClick={() => void continueAfterReaction()}>
+                  {reaction.nextIdx === null ? 'Finish & get evaluation' : 'Continue to next question'}
+                </button>
+              </div>
+            </section>
+          )}
 
           {actionError && (
             <div role="alert" className="rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-300">
@@ -504,7 +604,7 @@ export function InterviewRoom() {
             </div>
           )}
 
-          {allAnswered && needsEvaluation && !actionError && (
+          {allAnswered && needsEvaluation && !actionError && !reaction && (
             <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-4">
               <p className="text-sm text-slate-200">All questions are answered. Get your score and feedback.</p>
               <button className={`${primaryBtn} mt-3`} onClick={() => void runEvaluation()}>
@@ -513,31 +613,33 @@ export function InterviewRoom() {
             </div>
           )}
 
-          <div className="flex flex-wrap justify-between gap-2">
-            <button className={ghostBtn} onClick={() => goTo(Math.max(0, idx - 1))} disabled={idx === 0 || saving}>
-              Previous
-            </button>
-            <div className="flex gap-2">
-              {isAnswered ? (
-                <button
-                  className={primaryBtn}
-                  onClick={() => goTo(Math.min(questions.length - 1, idx + 1))}
-                  disabled={idx === questions.length - 1}
-                >
-                  Next question
-                </button>
-              ) : (
-                <>
-                  <button className={ghostBtn} onClick={skip} disabled={saving}>
-                    Skip
+          {!reaction && (
+            <div className="flex flex-wrap justify-between gap-2">
+              <button className={ghostBtn} onClick={() => goTo(Math.max(0, idx - 1))} disabled={idx === 0 || saving}>
+                Previous
+              </button>
+              <div className="flex gap-2">
+                {isAnswered ? (
+                  <button
+                    className={primaryBtn}
+                    onClick={() => goTo(Math.min(questions.length - 1, idx + 1))}
+                    disabled={idx === questions.length - 1}
+                  >
+                    Next question
                   </button>
-                  <button className={primaryBtn} onClick={() => void submit()} disabled={saving || !draft.trim()}>
-                    {saving ? 'Saving…' : isLast ? 'Submit and finish' : 'Submit answer'}
-                  </button>
-                </>
-              )}
+                ) : (
+                  <>
+                    <button className={ghostBtn} onClick={skip} disabled={saving}>
+                      Skip
+                    </button>
+                    <button className={primaryBtn} onClick={() => void submit()} disabled={saving || !draft.trim()}>
+                      {saving ? 'Reviewing…' : isLast ? 'Submit and finish' : 'Submit answer'}
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          )}
           <p className="text-right text-xs text-slate-500">Tip: Ctrl + Enter submits your answer.</p>
         </div>
       </div>
