@@ -115,7 +115,7 @@ export function Resume() {
         <div className="grid gap-3">
           <Card title="Next step">
             <p className="text-xs leading-5 text-slate-300">
-              Gemini writes interview questions from the role you choose. Reading your resume is not supported yet,
+              Intervio writes interview questions from the role you choose. Reading your resume is not supported yet,
               so pick the role that matches it.
             </p>
             <Button size="sm" className="mt-3" onClick={() => navigate('/interviews/new')}>
