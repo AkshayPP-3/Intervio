@@ -78,7 +78,7 @@ export const generateChatResponse = async (
     const text = response.text;
 
     if (!text) {
-      throw new appError("Gemini returned an empty response", 502);
+      throw new appError("Intervio AI returned an empty response", 502);
     }
 
     return text;
@@ -89,20 +89,20 @@ export const generateChatResponse = async (
       console.error("Gemini API error:", error);
       if (error?.status === 503) {
         throw new appError(
-          "Gemini is temporarily unavailable. Please try again in a moment.",
+          "Intervio AI is temporarily unavailable. Please try again in a moment.",
           503
         );
       }
       if (error?.status === 429) {
         throw new appError(
-          "Gemini API rate limit reached. Please try again later.",
+          "Intervio AI rate limit reached. Please try again later.",
           429
         );
       }
 
     if (error?.status === 401 || error?.status === 403) {
       throw new appError(
-        "Gemini API authentication failed.",
+        "Intervio AI authentication failed.",
         502
       );
     }
@@ -167,7 +167,7 @@ Return this exact format:
 
     if (!text) {
       throw new appError(
-        "Gemini returned an empty response",
+        "Intervio AI returned an empty response",
         502
       );
     }
@@ -182,10 +182,10 @@ Return this exact format:
 
     console.error("Gemini question generation error:", error);
     if (error?.status === 503) {
-      throw new appError("Gemini is temporarily busy. Please try again in a moment.", 503);
+      throw new appError("Intervio AI is temporarily busy. Please try again in a moment.", 503);
     }
     if (error?.status === 429) {
-      throw new appError("Gemini API rate limit reached. Please try again later.", 429);
+      throw new appError("Intervio AI rate limit reached. Please try again later.", 429);
     }
 
     throw new appError(
@@ -210,8 +210,8 @@ export const reactToInterviewAnswer = async (
 ): Promise<string> => {
   try {
     const transitionHint = data.isLastQuestion
-      ? "End by thanking them and letting them know we are ready for their final evaluation."
-      : "End with a natural 1-clause transition to the next question.";
+      ? 'End with a short closing statement like "Thank you for that answer. Let us wrap up and review your evaluation."'
+      : 'End with a short transition statement like "Nice answer, let us move on to the next question."';
 
     const prompt = `
 Interview Topic / Role: ${data.role}
@@ -224,26 +224,28 @@ ${data.questionText}
 Candidate's answer (may be in English, ${data.candidateLanguage ?? "an Indian language"}, or code-mixed):
 ${data.answerText}
 
-Respond as the live interviewer in 2-3 short, natural spoken sentences in English:
+Respond as the live interviewer in 2 short, natural spoken sentences in English:
 1. Understand the candidate's answer even if it is in an Indian language or transliterated.
-2. React encouragingly like a real interviewer: briefly acknowledge what was good, or gently point out a key concept/correction if something was missing.
-3. Stay strictly on the topic "${data.role}". If the candidate went off-topic or asked something unrelated to "${data.role}", politely bring them back on topic without answering the off-topic query.
-4. ${transitionHint}
+2. React encouragingly like a real interviewer: briefly say what was good or correct, or gently mention what was missing/incorrect.
+3. Stay strictly on the topic "${data.role}". If the candidate went off-topic or asked something unrelated to "${data.role}", politely remind them this interview covers "${data.role}" only without answering the off-topic query.
+4. CRITICAL RULE: Do NOT ask any question, follow-up question, or prompt for more details. Never include a question mark (?) in your reply because the next interview question is already queued separately.
+5. ${transitionHint}
 `;
 
     const response = await generateWithFallback({
       contents: prompt,
       config: {
         systemInstruction:
-          `You are an encouraging, realistic live mock interviewer conducting an interview strictly on "${data.role}". ` +
+          `You are Intervio, an encouraging, realistic live mock interviewer conducting an interview strictly on "${data.role}". ` +
           "You understand answers in English and all Indian languages, but you ALWAYS speak and reply ONLY in clear, natural English. " +
-          "Keep replies concise (2-3 spoken sentences, plain text without markdown) so they work smoothly as live subtitles and voice.",
+          "NEVER ask any follow-up questions or include '?' in your response—only give brief feedback on the answer and state that we are moving to the next question (or wrapping up). " +
+          "Keep replies concise (2 short spoken sentences, plain text without markdown).",
       },
     });
 
     const text = response.text?.trim();
     if (!text) {
-      throw new appError("Gemini returned an empty reaction", 502);
+      throw new appError("Intervio AI returned an empty reaction", 502);
     }
     return text;
   } catch (error) {
@@ -354,7 +356,7 @@ Return exactly this structure:
 
     if (!text) {
       throw new appError(
-        "Gemini returned an empty response",
+        "Intervio AI returned an empty response",
         502
       );
     }
