@@ -7,23 +7,15 @@ import { useAuth } from '../../hooks/useAuth'
 import { errorMessage } from '../../services/api'
 import { average, formatShortDate, parseList, pct } from '../../utils/helpers'
 import type { DashboardData } from '../../types/interview.types'
-import { createInterview } from '../interview/interview.service'
 import { PerformanceChart } from './components/PerformanceChart'
 import { RecentInterviews } from './components/RecentInterviews'
 import { StatsCard } from './components/StatsCard'
 import { countAnsweredQuestions, getDashboard } from './dashboard.service'
 
-const QUICK_PRACTICE = [
-  { label: 'Aptitude', role: 'Aptitude' },
-  { label: 'Coding / DSA', role: 'Coding and DSA' },
-  { label: 'HR and Behavioural', role: 'HR and Behavioural' },
-  { label: 'Communication', role: 'Communication' },
-]
-
-const PRACTICE_FOR: Record<string, { label: string; role: string }> = {
-  Technical: { label: 'Technical', role: 'Technical' },
-  Communication: { label: 'Communication', role: 'Communication' },
-  Confidence: { label: 'HR and Behavioural', role: 'HR and Behavioural' },
+const PRACTICE_FOR: Record<string, string> = {
+  Technical: 'Technical Fundamentals',
+  Communication: 'Communication',
+  Confidence: 'HR & Behavioural',
 }
 
 function useDashboard() {
@@ -98,26 +90,7 @@ export function Dashboard() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { data, answered, error, loading, reload } = useDashboard()
-  const [practiceBusy, setPracticeBusy] = useState<string | null>(null)
-  const [actionError, setActionError] = useState<string | null>(null)
   const userName = user?.name?.split(' ')[0] ?? 'there'
-
-  async function startPractice(label: string, role: string) {
-    setPracticeBusy(label)
-    setActionError(null)
-    try {
-      const id = await createInterview({
-        title: `${label} practice`,
-        role,
-        difficulty: 'Intermediate',
-        language: 'English',
-      })
-      navigate(`/interviews/${id}`)
-    } catch (e) {
-      setActionError(errorMessage(e, 'Could not start practice.'))
-      setPracticeBusy(null)
-    }
-  }
 
   const header = (
     <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
@@ -225,16 +198,12 @@ export function Dashboard() {
     suggestion = (
       <>
         <p className="text-sm leading-6 text-slate-300">
-          Your {weakest.key.toLowerCase()} score ({pct(weakest.value)}) is your lowest. A short{' '}
-          {target?.label.toLowerCase()} session is the quickest way to raise your average.
+          Your {weakest.key.toLowerCase()} score ({pct(weakest.value)}) is your lowest. Focus on{' '}
+          {target ?? 'a topic of your choice'} in Practice to improve it.
         </p>
         <div className="mt-auto pt-3">
-          <Button
-            size="sm"
-            disabled={practiceBusy !== null}
-            onClick={() => target && void startPractice(target.label, target.role)}
-          >
-            {practiceBusy === target?.label ? 'Preparing…' : `Practice ${target?.label}`}
+          <Button size="sm" onClick={() => navigate('/practice')}>
+            Choose a practice topic
           </Button>
         </div>
       </>
@@ -263,11 +232,7 @@ export function Dashboard() {
           Refresh failed: {error}. Showing the last loaded data.
         </p>
       )}
-      {actionError && (
-        <p role="alert" className="mb-4 rounded-md bg-red-500/10 px-3 py-2 text-xs text-red-300">
-          {actionError}
-        </p>
-      )}
+
 
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <StatsCard title="Total interviews" value={stats.totalInterviews} />
@@ -367,21 +332,13 @@ export function Dashboard() {
           />
         </Card>
 
-        <Card title="Quick practice">
-          <p className="mb-3 text-[11px] text-slate-400">Starts a 5-question set written by Intervio.</p>
-          <div className="flex flex-wrap gap-1.5">
-            {QUICK_PRACTICE.map((p) => (
-              <Button
-                key={p.label}
-                size="sm"
-                variant="secondary"
-                disabled={practiceBusy !== null}
-                onClick={() => void startPractice(p.label, p.role)}
-              >
-                {practiceBusy === p.label ? 'Preparing…' : p.label}
-              </Button>
-            ))}
-          </div>
+        <Card title="Practice by topic">
+          <p className="mb-3 text-[11px] leading-5 text-slate-400">
+            Choose a subject, a specific topic, and the number of questions for your next test.
+          </p>
+          <Button size="sm" variant="secondary" onClick={() => navigate('/practice')}>
+            Browse practice topics
+          </Button>
         </Card>
       </div>
     </div>
