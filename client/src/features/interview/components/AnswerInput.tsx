@@ -98,7 +98,7 @@ export function AnswerInput({
           readOnly
             ? ''
             : sttSupported
-              ? `Press “Start speaking” and answer in ${language} (or English), or type here. Gemini understands Indian languages and replies in English.`
+              ? `Press “Start speaking” and answer in ${language} (or English), or type here. Intervio understands Indian languages and replies in English.`
               : `Type your answer here in ${language} or English.`
         }
         className="mt-3 h-44 w-full resize-y rounded-lg border border-slate-600 bg-slate-900 p-3 text-sm leading-6 text-slate-100 outline-none placeholder:text-slate-500 read-only:opacity-80 focus:border-blue-400"
