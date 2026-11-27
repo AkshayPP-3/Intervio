@@ -10,7 +10,7 @@ const PAGES = [
   { name: 'Dashboard', path: '/dashboard', words: 'home overview stats' },
   { name: 'Interviews', path: '/interviews', words: 'interview mock history start new' },
   { name: 'Practice', path: '/practice', words: 'aptitude coding dsa hr communication drill' },
-  { name: 'AI Assistant', path: '/ai-assistant', words: 'chat gemini help bot' },
+  { name: 'AI Assistant', path: '/ai-assistant', words: 'chat intervio ai help bot' },
   { name: 'Reports', path: '/reports', words: 'report score feedback evaluation' },
   { name: 'Resume', path: '/resume', words: 'cv upload' },
   { name: 'Leaderboard', path: '/leaderboard', words: 'rank top best' },
