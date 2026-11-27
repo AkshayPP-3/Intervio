@@ -83,7 +83,7 @@ function DashboardSkeleton() {
     <div className="animate-pulse space-y-3" aria-busy="true" aria-label="Loading dashboard">
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="h-[86px] rounded-lg bg-slate-800" />
+          <div key={i} className="h-86px rounded-lg bg-slate-800" />
         ))}
       </div>
       <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
@@ -195,7 +195,7 @@ export function Dashboard() {
     suggestion = (
       <>
         <p className="text-sm leading-6 text-slate-300">
-          Save your resume for reference, then start a role-based interview. Gemini writes the questions for your role.
+          Save your resume for reference, then start a role-based interview. Intervio writes the questions for your role.
         </p>
         <div className="mt-auto flex flex-wrap gap-2 pt-3">
           <Button size="sm" onClick={() => navigate('/interviews')}>
@@ -368,7 +368,7 @@ export function Dashboard() {
         </Card>
 
         <Card title="Quick practice">
-          <p className="mb-3 text-[11px] text-slate-400">Starts a 5-question set written by Gemini.</p>
+          <p className="mb-3 text-[11px] text-slate-400">Starts a 5-question set written by Intervio.</p>
           <div className="flex flex-wrap gap-1.5">
             {QUICK_PRACTICE.map((p) => (
               <Button
