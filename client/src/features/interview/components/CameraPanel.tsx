@@ -125,7 +125,7 @@ export function CameraPanel({ status, subtitle, subtitleLabel = 'Subtitles · En
         >
           AI
         </span>
-        Gemini interviewer · {label}
+        Intervio interviewer · {label}
       </div>
 
       {state === 'on' && (
