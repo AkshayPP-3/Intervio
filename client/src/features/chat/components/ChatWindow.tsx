@@ -70,7 +70,7 @@ export function ChatWindow(p: ChatWindowProps) {
         {p.sending && (
           <div className="flex justify-start">
             <div className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-slate-400">
-              Gemini is thinking…
+              Intervio is thinking…
             </div>
           </div>
         )}
@@ -102,8 +102,8 @@ export function ChatWindow(p: ChatWindowProps) {
                 p.onSend(p.draft)
               }
             }}
-            placeholder="Message Gemini… (Enter to send, Shift+Enter for a new line)"
-            className="min-h-[44px] flex-1 resize-none rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-100 outline-none placeholder:text-slate-500 focus:border-blue-400"
+            placeholder="Message Intervio… (Enter to send, Shift+Enter for a new line)"
+            className="min-h-44px flex-1 resize-none rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-100 outline-none placeholder:text-slate-500 focus:border-blue-400"
           />
           <Button
             variant={p.listening ? 'danger' : 'secondary'}
