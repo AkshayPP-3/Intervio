@@ -19,9 +19,9 @@ export function MessageBubble({ message, pending = false, speaking = false, canS
         } ${pending ? 'opacity-70' : ''}`}
       >
         <p className={`mb-1 text-[10px] font-semibold ${mine ? 'text-blue-100' : 'text-blue-300'}`}>
-          {mine ? 'You' : 'Gemini'}
+          {mine ? 'You' : 'Intervio'}
         </p>
-        <p className="whitespace-pre-wrap break-words">{message.content}</p>
+        <p className="whitespace-pre-wrap wrap-break-word">{message.content}</p>
         <div className={`mt-1.5 flex items-center gap-3 text-[10px] ${mine ? 'text-blue-100/80' : 'text-slate-500'}`}>
           <span>{pending ? 'Sending…' : formatDateTime(message.createdAt)}</span>
           {!mine && canSpeak && (
