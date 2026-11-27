@@ -378,7 +378,7 @@ export function InterviewRoom() {
           <div className="mx-auto size-10 animate-spin rounded-full border-2 border-slate-600 border-t-blue-400" />
           <h1 className="mt-4 text-lg font-bold text-white">Evaluating your answers</h1>
           <p className="mt-2 text-sm text-slate-400">
-            Gemini is reviewing your technical depth, communication and confidence. This usually takes 10 to 20
+            Intervio is reviewing your technical depth, communication and confidence. This usually takes 10 to 20
             seconds.
           </p>
         </div>
@@ -488,7 +488,7 @@ export function InterviewRoom() {
           <CameraPanel
             status={status}
             subtitle={reaction ? reaction.text : question.questionText}
-            subtitleLabel={reaction ? 'Gemini reaction · English' : `Question ${idx + 1} · English`}
+            subtitleLabel={reaction ? 'Intervio reaction · English' : `Question ${idx + 1} · English`}
           />
 
           <nav aria-label="Questions" className="rounded-xl border border-slate-700 bg-slate-800 p-4">
@@ -572,7 +572,7 @@ export function InterviewRoom() {
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs font-semibold uppercase tracking-wide text-blue-300">
-                  Gemini Interviewer Reaction · English
+                  Intervio Interviewer Reaction · English
                 </p>
                 {speech.ttsSupported && (
                   <button
