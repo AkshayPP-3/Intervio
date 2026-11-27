@@ -1,349 +1,413 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { api } from '../../services/api'
-import { useSpeech } from '../interview/hooks/useSpeech'
-import { LANGUAGE_LOCALES, createInterview } from '../interview/interview.service'
+import { Button } from '../../components/ui/Button'
+import { errorMessage } from '../../services/api'
 import {
-  CATEGORIES,
-  DIFFICULTIES,
-  SENTENCES,
-  TECH_ROLES,
-  analyzeSpeech,
-  practiceTitle,
-  summarise,
+  MAX_QUESTIONS,
+  MIN_QUESTIONS,
+  PRACTICE_CATEGORIES,
+  evaluatePracticeAnswers,
+  generatePracticeQuestions,
 } from './practice.service'
-import type { InterviewLite, PracticeCategory } from './practice.service'
+import type { PracticeQuestion, PracticeResult, PracticeTopic } from './practice.service'
 
-const PREFS_KEY = 'intervio_practice_prefs'
-type Prefs = { difficulty: string; language: string; techRole: string }
-const DEFAULT_PREFS: Prefs = { difficulty: 'Intermediate', language: 'English', techRole: 'Frontend Developer' }
-
-function loadPrefs(): Prefs {
-  try {
-    const raw = localStorage.getItem(PREFS_KEY)
-    return raw ? { ...DEFAULT_PREFS, ...(JSON.parse(raw) as Partial<Prefs>) } : DEFAULT_PREFS
-  } catch {
-    return DEFAULT_PREFS
-  }
-}
-
-const primaryBtn =
-  'h-8 rounded-md bg-blue-500 px-3 text-xs font-semibold text-white transition hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-50'
-const ghostBtn =
-  'h-8 rounded-md bg-slate-700 px-3 text-xs font-medium text-blue-300 transition hover:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50'
-const field =
-  'h-8 rounded-md border border-slate-600 bg-slate-900 px-2 text-xs text-slate-100 outline-none focus:border-blue-400'
+type Screen = 'setup' | 'test' | 'results'
 
 export function Practice() {
   const navigate = useNavigate()
-  const [prefs, setPrefs] = useState<Prefs>(loadPrefs)
-  const [list, setList] = useState<InterviewLite[] | null>(null)
-  const [busyKey, setBusyKey] = useState<string | null>(null)
+  const [screen, setScreen] = useState<Screen>('setup')
+  const [categoryKey, setCategoryKey] = useState<string | null>(null)
+  const [topicKey, setTopicKey] = useState<string | null>(null)
+  const [questionCount, setQuestionCount] = useState(MIN_QUESTIONS)
+  const [questions, setQuestions] = useState<PracticeQuestion[]>([])
+  const [answers, setAnswers] = useState<Record<string, string>>({})
+  const [results, setResults] = useState<PracticeResult[]>([])
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [busy, setBusy] = useState<'generating' | 'evaluating' | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [sample, setSample] = useState<{ key: string; index: number } | null>(null)
 
-  const [sentenceIdx, setSentenceIdx] = useState(0)
-  const [heard, setHeard] = useState('')
+  const category = PRACTICE_CATEGORIES.find((item) => item.key === categoryKey)
+  const selectedTopic: PracticeTopic | undefined = category?.groups
+    .flatMap((item) => item.topics)
+    .find((item) => item.key === topicKey)
+  const currentQuestion = questions[currentIndex]
+  const averageScore = results.length
+    ? results.reduce((total, result) => total + result.score, 0) / results.length
+    : 0
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(PREFS_KEY, JSON.stringify(prefs))
-    } catch {
-      /* ignore */
-    }
-  }, [prefs])
-
-  useEffect(() => {
-    let cancelled = false
-    api.get<InterviewLite[]>('/interviews')
-      .then((d) => {
-        if (!cancelled) setList(d)
-      })
-      .catch(() => {
-        /* counts are optional; the page still works without them */
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  const appendHeard = useCallback((chunk: string) => {
-    if (chunk) setHeard((h) => (h ? `${h} ${chunk}` : chunk))
-  }, [])
-  // The drill sentences and sample questions are English, so speech is always en-IN.
-  const speech = useSpeech('en-IN', appendHeard)
-  const { speak, stopSpeaking, startListening, stopListening, listening } = speech
-
-  const sentence = SENTENCES[sentenceIdx % SENTENCES.length] as string
-  const result = useMemo(() => (heard.trim() ? analyzeSpeech(sentence, heard) : null), [heard, sentence])
-
-  async function startSet(c: PracticeCategory) {
-    if (busyKey) return
-    const role = c.role ?? prefs.techRole.trim()
-    if (!role) {
-      setError('Enter a role for the Technical set.')
+  async function startTest() {
+    if (!category || !selectedTopic || busy) {
+      setError('Choose a practice area and topic before starting.')
       return
     }
-    setBusyKey(c.key)
+
+    setBusy('generating')
     setError(null)
     try {
-      const id = await createInterview({
-        title: practiceTitle(c),
-        role,
-        difficulty: prefs.difficulty,
-        language: prefs.language,
-      })
-      navigate(`/interviews/${id}`)
+      const generated = await generatePracticeQuestions(selectedTopic.topic, questionCount)
+      if (
+        generated.length !== questionCount ||
+        generated.some((item) => !item.id || !item.question.trim())
+      ) {
+        throw new Error(`Intervio did not return exactly ${questionCount} valid questions. Please try again.`)
+      }
+
+      setQuestions(generated)
+      setAnswers(Object.fromEntries(generated.map((item) => [item.id, ''])))
+      setResults([])
+      setCurrentIndex(0)
+      setScreen('test')
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not start this set. Please try again.')
-      setBusyKey(null)
+      setError(errorMessage(e, 'Could not prepare your practice test. Please try again.'))
+    } finally {
+      setBusy(null)
     }
   }
 
-  function showSample(c: PracticeCategory) {
-    stopSpeaking()
-    // Same category pressed again shows the next question; another category starts at a random one.
-    setSample((s) =>
-      s?.key === c.key
-        ? { key: c.key, index: (s.index + 1) % c.samples.length }
-        : { key: c.key, index: Math.floor(Math.random() * c.samples.length) },
-    )
-  }
+  async function submitTest() {
+    if (!category || !selectedTopic || questions.length === 0 || busy) return
 
-  function newSentence() {
-    stopListening()
-    stopSpeaking()
-    setHeard('')
-    setSentenceIdx((i) => (i + 1) % SENTENCES.length)
-  }
+    setBusy('evaluating')
+    setError(null)
+    try {
+      const evaluated = await evaluatePracticeAnswers(
+        selectedTopic.topic,
+        questions.map((item) => ({
+          question: item.question,
+          userAnswer: answers[item.id] ?? '',
+        })),
+      )
+      if (
+        evaluated.length !== questions.length ||
+        evaluated.some((item) => !item.idealAnswer.trim() || !item.feedback.trim())
+      ) {
+        throw new Error('Intervio could not review every answer. Please submit the test again.')
+      }
 
-  function toggleRecord() {
-    if (listening) {
-      stopListening()
-      return
+      setResults(evaluated)
+      setScreen('results')
+    } catch (e) {
+      setError(errorMessage(e, 'Could not review your answers. Please try again.'))
+    } finally {
+      setBusy(null)
     }
-    stopSpeaking()
-    setHeard('')
-    startListening()
   }
 
-  const sampleCategory = sample ? CATEGORIES.find((c) => c.key === sample.key) : undefined
-  const sampleText = sampleCategory && sample ? sampleCategory.samples[sample.index] : undefined
+  function chooseAnotherTopic() {
+    setScreen('setup')
+    setTopicKey(null)
+    setQuestions([])
+    setAnswers({})
+    setResults([])
+    setCurrentIndex(0)
+    setError(null)
+  }
+
+  const page = 'min-h-[calc(100vh-56px)] bg-[#071020] px-4 py-5 md:px-6'
 
   return (
-    <div className="min-h-screen bg-slate-950 px-4 py-4">
-      <h1 className="text-xl font-bold text-white">Practice</h1>
-      <p className="mt-1 text-sm text-slate-400">Short focused sets. Pick a skill, then answer by voice or text.</p>
-
-      <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-slate-700 bg-slate-800 px-4 py-3">
-        <label className="flex items-center gap-2 text-xs text-slate-300">
-          Difficulty
-          <select
-            className={field}
-            value={prefs.difficulty}
-            onChange={(e) => setPrefs({ ...prefs, difficulty: e.target.value })}
-          >
-            {DIFFICULTIES.map((d) => (
-              <option key={d}>{d}</option>
-            ))}
-          </select>
-        </label>
-        <label className="flex items-center gap-2 text-xs text-slate-300">
-          Language
-          <select
-            className={field}
-            value={prefs.language}
-            onChange={(e) => setPrefs({ ...prefs, language: e.target.value })}
-          >
-            {Object.keys(LANGUAGE_LOCALES).map((l) => (
-              <option key={l}>{l}</option>
-            ))}
-          </select>
-        </label>
-        <label className="flex items-center gap-2 text-xs text-slate-300">
-          Role for Technical set
-          <input
-            className={`${field} w-48`}
-            list="practice-roles"
-            value={prefs.techRole}
-            maxLength={100}
-            onChange={(e) => setPrefs({ ...prefs, techRole: e.target.value })}
-          />
-          <datalist id="practice-roles">
-            {TECH_ROLES.map((r) => (
-              <option key={r} value={r} />
-            ))}
-          </datalist>
-        </label>
-      </div>
-
-      {error && (
-        <p role="alert" className="mt-4 rounded-md bg-red-500/10 px-3 py-2 text-xs text-red-300">
-          {error}
-        </p>
-      )}
-      {busyKey && (
-        <p role="status" className="mt-4 rounded-md bg-blue-500/10 px-3 py-2 text-xs text-blue-200">
-          Intervio is writing your questions. This takes a few seconds.
-        </p>
-      )}
-
-      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {CATEGORIES.map((c) => {
-          const { completed, unfinished } = summarise(list ?? [], c)
-          const tag = list === null ? null : completed === 0 ? 'New' : `${completed} completed`
-          return (
-            <section key={c.key} className="flex flex-col rounded-xl border border-slate-700 bg-slate-800 p-4">
-              <div className="flex items-start justify-between gap-2">
-                <h2 className="text-sm font-bold text-white">{c.title}</h2>
-                {tag && (
-                  <span className="shrink-0 rounded-full bg-slate-700 px-2 py-0.5 text-[11px] font-medium text-blue-300">
-                    {tag}
-                  </span>
-                )}
-              </div>
-              <p className="mt-2 text-xs leading-5 text-slate-400">{c.description}</p>
-
-              {unfinished && (
-                <button
-                  onClick={() => navigate(`/interviews/${unfinished.id}`)}
-                  className="mt-2 text-left text-xs font-medium text-amber-300 underline-offset-2 hover:underline"
-                >
-                  You have an unfinished set. Continue
-                </button>
-              )}
-
-              <div className="mt-auto flex flex-wrap gap-2 pt-4">
-                <button className={primaryBtn} disabled={busyKey !== null} onClick={() => void startSet(c)}>
-                  {busyKey === c.key ? 'Preparing…' : 'Start set'}
-                </button>
-                <button
-                  className={ghostBtn}
-                  aria-pressed={sample?.key === c.key}
-                  onClick={() => showSample(c)}
-                >
-                  Sample question
-                </button>
-              </div>
-            </section>
-          )
-        })}
-      </div>
-
-      {sampleCategory && sampleText && (
-        <section
-          aria-live="polite"
-          className="mt-4 rounded-xl border border-blue-500/30 bg-blue-500/10 p-4"
-        >
-          <p className="text-xs font-semibold uppercase tracking-wide text-blue-300">
-            Sample · {sampleCategory.title}
-          </p>
-          <p className="mt-2 text-base font-medium leading-7 text-white">{sampleText}</p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {speech.ttsSupported && (
-              <button
-                className={ghostBtn}
-                onClick={() => (speech.speaking ? stopSpeaking() : speak(sampleText))}
-              >
-                {speech.speaking ? 'Stop reading' : 'Read aloud'}
-              </button>
-            )}
-            <button className={ghostBtn} onClick={() => showSample(sampleCategory)}>
-              Another question
-            </button>
-            <button className={primaryBtn} disabled={busyKey !== null} onClick={() => void startSet(sampleCategory)}>
-              Practise this set
-            </button>
-            <button
-              className={ghostBtn}
-              onClick={() => {
-                stopSpeaking()
-                setSample(null)
-              }}
-            >
-              Close
-            </button>
+    <div className={page}>
+      <div className="mx-auto w-full max-w-7xl">
+        <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-blue-300">Practice by topic</p>
+            <h1 className="mt-1 text-xl font-bold text-white">
+              {screen === 'setup' ? 'Build your own practice test' : screen === 'test' ? 'Your practice test' : 'Test review'}
+            </h1>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-400">
+              Choose a subject and a specific topic, then set the number of questions. Your answers and ideal answers
+              will be reviewed when you finish.
+            </p>
           </div>
-        </section>
-      )}
-
-      <section className="mt-4 rounded-xl border border-slate-700 bg-slate-800 p-4">
-        <h2 className="text-sm font-bold text-white">Pronunciation and speaking drill</h2>
-        <p className="mt-1 text-xs text-slate-400">Read the sentence aloud. We transcribe it and show what we heard.</p>
-
-        <p className="mt-4 text-lg leading-8 text-white" aria-label="Sentence to read">
-          {result
-            ? result.words.map((w, k) => (
-                <span key={k} className={w.ok ? 'text-emerald-300' : 'text-red-300 underline decoration-red-400/60'}>
-                  {w.text}{' '}
-                </span>
-              ))
-            : `“${sentence}”`}
-        </p>
-
-        {!speech.sttSupported && (
-          <p className="mt-3 rounded-md bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
-            Voice input is not supported in this browser. Use Chrome or Edge to record.
-          </p>
-        )}
-        {speech.sttError && (
-          <p role="alert" className="mt-3 rounded-md bg-red-500/10 px-3 py-2 text-xs text-red-300">
-            {speech.sttError}
-          </p>
-        )}
-
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <button
-            className={listening ? 'h-8 rounded-md bg-red-500 px-3 text-xs font-semibold text-white hover:bg-red-400' : primaryBtn}
-            disabled={!speech.sttSupported}
-            aria-pressed={listening}
-            onClick={toggleRecord}
-          >
-            {listening ? 'Stop' : 'Record'}
-          </button>
-          {speech.ttsSupported && (
-            <button className={ghostBtn} onClick={() => (speech.speaking ? stopSpeaking() : speak(sentence))}>
-              {speech.speaking ? 'Stop' : 'Listen to sentence'}
-            </button>
+          {screen !== 'setup' && (
+            <Button variant="secondary" onClick={() => navigate('/dashboard')}>
+              Exit practice
+            </Button>
           )}
-          <button className={ghostBtn} onClick={newSentence}>
-            New sentence
-          </button>
         </div>
 
-        {listening && (
-          <p className="mt-3 flex items-center gap-2 text-xs text-red-300">
-            <span className="size-2 animate-pulse rounded-full bg-red-400" />
-            Listening… <span className="italic text-slate-300">{[heard, speech.interim].filter(Boolean).join(' ')}</span>
+        {error && (
+          <p role="alert" className="mb-4 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+            {error}
           </p>
         )}
 
-        {!listening && result && (
-          <div aria-live="polite" className="mt-4 rounded-lg bg-slate-900 p-4">
-            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-              <p className="text-2xl font-bold text-white">{result.accuracy}%</p>
-              <p className="text-sm text-slate-300">
-                {result.accuracy >= 90
-                  ? 'Excellent. Clear and accurate.'
-                  : result.accuracy >= 70
-                    ? 'Good. Slow down on the words in red.'
-                    : 'Try again more slowly and clearly.'}
-              </p>
+        {screen === 'setup' && (
+          <div className="grid gap-4 xl:grid-cols-[250px_minmax(0,1fr)]">
+            <section className="h-fit rounded-xl border border-slate-700 bg-slate-800 p-4">
+              <h2 className="text-sm font-bold text-white">1. Choose a subject</h2>
+              <div className="mt-3 grid gap-2">
+                {PRACTICE_CATEGORIES.map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    aria-pressed={categoryKey === item.key}
+                    onClick={() => {
+                      setCategoryKey(item.key)
+                      setTopicKey(null)
+                    }}
+                    className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left text-sm transition ${
+                      categoryKey === item.key
+                        ? 'border-blue-400 bg-blue-500/10 text-white'
+                        : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-slate-500'
+                    }`}
+                  >
+                    <span aria-hidden="true" className="text-lg">{item.icon}</span>
+                    <span className="min-w-0">
+                      <span className="block font-semibold">{item.label}</span>
+                      <span className="mt-0.5 block text-[11px] leading-4 text-slate-400">{item.description}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <div className="space-y-4">
+              <section className="rounded-xl border border-slate-700 bg-slate-800 p-4 md:p-5">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <h2 className="text-sm font-bold text-white">2. Choose a topic</h2>
+                    <p className="mt-1 text-xs text-slate-400">
+                      {category ? `Select one topic under ${category.label}.` : 'Choose a subject to see its topics.'}
+                    </p>
+                  </div>
+                  {selectedTopic && (
+                    <span className="rounded-full border border-blue-400/40 bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-200">
+                      {selectedTopic.label}
+                    </span>
+                  )}
+                </div>
+                {category ? (
+                  <div className="mt-4 space-y-4">
+                    {category.groups.map((topicGroup) => (
+                      <div key={topicGroup.key}>
+                        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-300">
+                          {topicGroup.label}
+                        </h3>
+                        <div className="flex flex-wrap gap-2">
+                          {topicGroup.topics.map((topic) => (
+                            <button
+                              key={topic.key}
+                              type="button"
+                              aria-pressed={topicKey === topic.key}
+                              onClick={() => setTopicKey(topic.key)}
+                              className={`rounded-md border px-3 py-2 text-xs font-medium transition ${
+                                topicKey === topic.key
+                                  ? 'border-blue-400 bg-blue-500 text-white'
+                                  : 'border-slate-600 bg-slate-900 text-slate-300 hover:border-slate-400 hover:text-white'
+                              }`}
+                            >
+                              {topic.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-4 rounded-lg border border-dashed border-slate-600 px-4 py-8 text-center text-sm text-slate-400">
+                    Select a subject to browse its topics.
+                  </p>
+                )}
+              </section>
+
+              <section className="flex flex-wrap items-end justify-between gap-4 rounded-xl border border-slate-700 bg-slate-800 p-4 md:p-5">
+                <div className="min-w-64 flex-1">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-sm font-bold text-white">3. Set question count</h2>
+                      <p className="mt-1 text-xs text-slate-400">Choose between {MIN_QUESTIONS} and {MAX_QUESTIONS} questions.</p>
+                    </div>
+                    <label className="flex items-center gap-2 text-xs text-slate-300">
+                      Questions
+                      <input
+                        type="number"
+                        min={MIN_QUESTIONS}
+                        max={MAX_QUESTIONS}
+                        step={1}
+                        value={questionCount}
+                        aria-label="Number of questions"
+                        onChange={(event) => {
+                          const value = event.currentTarget.valueAsNumber
+                          if (Number.isFinite(value)) {
+                            setQuestionCount(Math.max(MIN_QUESTIONS, Math.min(MAX_QUESTIONS, Math.round(value))))
+                          }
+                        }}
+                        className="h-9 w-20 rounded-md border border-slate-600 bg-slate-900 px-2 text-center text-sm font-semibold text-white outline-none focus:border-blue-400"
+                      />
+                    </label>
+                  </div>
+                  <input
+                    type="range"
+                    min={MIN_QUESTIONS}
+                    max={MAX_QUESTIONS}
+                    step={1}
+                    value={questionCount}
+                    aria-label="Adjust question count"
+                    onChange={(event) => setQuestionCount(Number(event.currentTarget.value))}
+                    className="mt-4 w-full accent-blue-500"
+                  />
+                  <div className="flex justify-between text-[11px] text-slate-500">
+                    <span>{MIN_QUESTIONS}</span>
+                    <span>{MAX_QUESTIONS}</span>
+                  </div>
+                </div>
+                <Button
+                  size="md"
+                  disabled={!selectedTopic || busy !== null}
+                  loading={busy === 'generating'}
+                  onClick={() => void startTest()}
+                  className="min-w-40"
+                >
+                  {busy === 'generating' ? 'Preparing test…' : `Start ${questionCount}-question test`}
+                </Button>
+              </section>
             </div>
-            <p className="mt-2 text-xs text-slate-400">
-              <span className="font-semibold text-slate-300">We heard:</span> {heard}
-            </p>
-            {result.extra.length > 0 && (
-              <p className="mt-1 text-xs text-slate-400">
-                <span className="font-semibold text-slate-300">Extra words:</span> {result.extra.join(', ')}
-              </p>
-            )}
-            <button className={`${ghostBtn} mt-3`} onClick={toggleRecord} disabled={!speech.sttSupported}>
-              Try again
-            </button>
           </div>
         )}
-      </section>
+
+        {screen === 'test' && currentQuestion && (
+          <section className="mx-auto max-w-4xl rounded-xl border border-slate-700 bg-slate-800 p-4 md:p-6">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold text-blue-300">{category?.label} · {selectedTopic?.label}</p>
+                <h2 className="mt-2 text-sm font-semibold text-white">
+                  Question {currentIndex + 1} of {questions.length}
+                </h2>
+              </div>
+              <span className="rounded-full bg-slate-700 px-3 py-1 text-xs text-slate-300">
+                {Object.values(answers).filter((answer) => answer.trim()).length} answered
+              </span>
+            </div>
+
+            <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-900">
+              <div
+                className="h-full rounded-full bg-blue-500 transition-all"
+                style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
+              />
+            </div>
+
+            <nav aria-label="Test questions" className="mt-4 flex flex-wrap gap-2">
+              {questions.map((item, index) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  aria-label={`Go to question ${index + 1}${answers[item.id]?.trim() ? ', answered' : ', unanswered'}`}
+                  aria-current={currentIndex === index ? 'step' : undefined}
+                  onClick={() => setCurrentIndex(index)}
+                  className={`size-9 rounded-md border text-xs font-semibold transition ${
+                    currentIndex === index
+                      ? 'border-blue-400 bg-blue-500 text-white'
+                      : answers[item.id]?.trim()
+                        ? 'border-blue-400/50 bg-blue-500/10 text-blue-200'
+                        : 'border-slate-600 bg-slate-900 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {index + 1}
+                </button>
+              ))}
+            </nav>
+
+            <div className="mt-5 rounded-lg border border-slate-700 bg-slate-900 p-4 md:p-5">
+              <p className="text-base font-semibold leading-7 text-white">{currentQuestion.question}</p>
+              <label htmlFor="practice-answer" className="mt-5 block text-xs font-semibold text-slate-300">
+                Your answer
+              </label>
+              <textarea
+                id="practice-answer"
+                value={answers[currentQuestion.id] ?? ''}
+                onChange={(event) =>
+                  setAnswers((previous) => ({ ...previous, [currentQuestion.id]: event.currentTarget.value }))
+                }
+                maxLength={5000}
+                rows={7}
+                placeholder="Write your answer here. You can leave a question blank and review its ideal answer after submitting."
+                className="mt-2 w-full resize-y rounded-md border border-slate-600 bg-slate-800 p-3 text-sm leading-6 text-slate-100 outline-none placeholder:text-slate-500 focus:border-blue-400"
+              />
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+              <Button
+                variant="secondary"
+                disabled={currentIndex === 0 || busy !== null}
+                onClick={() => setCurrentIndex((index) => Math.max(0, index - 1))}
+              >
+                Previous
+              </Button>
+              {currentIndex < questions.length - 1 ? (
+                <Button onClick={() => setCurrentIndex((index) => Math.min(questions.length - 1, index + 1))}>
+                  Next question
+                </Button>
+              ) : (
+                <Button loading={busy === 'evaluating'} disabled={busy !== null} onClick={() => void submitTest()}>
+                  {busy === 'evaluating' ? 'Reviewing answers…' : 'Submit and see answers'}
+                </Button>
+              )}
+            </div>
+            {busy === 'evaluating' && (
+              <p role="status" className="mt-3 text-center text-xs text-blue-200">
+                Intervio is checking your answers and preparing an ideal answer for each question.
+              </p>
+            )}
+          </section>
+        )}
+
+        {screen === 'results' && (
+          <div className="mx-auto max-w-5xl">
+            <section className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-700 bg-slate-800 p-5">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-blue-300">Practice complete</p>
+                <h2 className="mt-1 text-lg font-bold text-white">{category?.label} · {selectedTopic?.label}</h2>
+                <p className="mt-1 text-xs text-slate-400">{results.length} questions reviewed</p>
+              </div>
+              <div className="rounded-lg border border-slate-600 bg-slate-900 px-5 py-3 text-center">
+                <p className="text-2xl font-bold text-white">{averageScore.toFixed(1)}<span className="text-base text-slate-400">/10</span></p>
+                <p className="text-[11px] text-slate-400">Average score</p>
+              </div>
+            </section>
+
+            <div className="mt-4 space-y-3">
+              {results.map((result, index) => (
+                <article key={`${index}-${result.question}`} className="rounded-xl border border-slate-700 bg-slate-800 p-4 md:p-5">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <h3 className="text-xs font-semibold text-blue-300">Question {index + 1}</h3>
+                    <span className="rounded-full bg-slate-700 px-3 py-1 text-xs font-semibold text-white">
+                      {result.score}/10
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm font-semibold leading-6 text-white">{result.question}</p>
+                  <div className="mt-4 grid gap-3 md:grid-cols-2">
+                    <div className="rounded-lg bg-slate-900 p-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Your answer</p>
+                      <p className="mt-2 whitespace-pre-wrap text-xs leading-5 text-slate-200">
+                        {result.userAnswer.trim() || 'No answer entered.'}
+                      </p>
+                    </div>
+                    <div className="rounded-lg bg-slate-900 p-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-blue-300">
+                        Correct answer / ideal answer
+                      </p>
+                      <p className="mt-2 whitespace-pre-wrap text-xs leading-5 text-slate-200">{result.idealAnswer}</p>
+                    </div>
+                  </div>
+                  <p className="mt-3 rounded-lg border border-slate-700 px-3 py-2 text-xs leading-5 text-slate-300">
+                    <span className="font-semibold text-white">Feedback: </span>{result.feedback}
+                  </p>
+                </article>
+              ))}
+            </div>
+
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <Button variant="secondary" onClick={chooseAnotherTopic}>
+                Choose another topic
+              </Button>
+              <Button onClick={() => void startTest()} disabled={busy !== null} loading={busy === 'generating'}>
+                {busy === 'generating' ? 'Preparing…' : 'Practice this topic again'}
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
