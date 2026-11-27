@@ -9,7 +9,7 @@ import { useSpeech } from '../interview/hooks/useSpeech'
 import { ChatWindow } from './components/ChatWindow'
 import { createChat, listChats, sendMessage } from './chat.service'
 
-/** AI Assistant: chat with Gemini about interview preparation. Voice in and out. */
+/** AI Assistant: chat with Intervio about interview preparation. Voice in and out. */
 export function Chat() {
   const [chats, setChats] = useState<ChatType[] | null>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -121,7 +121,7 @@ export function Chat() {
     <div className="flex h-[calc(100vh-56px)] min-h-480px flex-col bg-[#071020] px-4 py-4 md:px-5">
       <PageHeader
         title="AI Assistant"
-        description="Ask Gemini about resumes, interview questions and preparation. Voice input and spoken replies supported."
+        description="Ask Intervio about resumes, interview questions and preparation. Voice input and spoken replies supported."
         actions={
           <>
             <label className="flex items-center gap-2 text-[11px] text-slate-300">
